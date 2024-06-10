@@ -1,0 +1,9 @@
+**/VHDL_LIBS
+**/logs
+**/results
+*.yml
+*.html
+transcript
+*.vstf
+*.wlf
+modelsim.ini
