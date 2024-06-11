@@ -5,6 +5,9 @@ library ieee;
 library osvvm;
   context osvvm.OsvvmContext;
 
+library osvvm_common ;
+  context osvvm_common.OsvvmCommonContext ; 
+
 package avmm_pkg is
   
   type AvmmPinoutT is record
@@ -18,7 +21,6 @@ package avmm_pkg is
 
   procedure AvmmWrite(signal trans: inout AddressBusRecType; addr, data, byte_enable: std_logic_vector);
   procedure AvmmRead(signal trans: inout AddressBusRecType; addr, byte_enable: std_logic_vector; variable read_data: out std_logic_vector);
-  procedure AvmmReadModifyWrite(signal trans: inout AddressBusRecType; addr, data, write_mask: std_logic_vector);
 
 end package;
 

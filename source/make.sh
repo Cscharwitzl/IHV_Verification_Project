@@ -14,7 +14,8 @@ source ../settings.make
 
 if [[ "$1" == "sim" ]] || [[ "$#" == "0" ]]; then
   echo "Starting Simulation..."
-  "$MODELSIM_PATH" -batch -logfile "logs/transcript" -do "source ../common.tcl; build project.pro; exit"
+  mkdir logs
+  "$MODELSIM_PATH" -c -logfile "logs/transcript" -do "source ../common.tcl; build project.pro; exit"
   
 elif [[ "$1" == "gui" ]]; then
   echo "Starting ModelSim GUI..."

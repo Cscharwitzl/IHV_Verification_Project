@@ -55,6 +55,8 @@ begin
         when READ_OP =>
         -- READ_OP END
 
+        when others =>
+
       end case;
     end loop;
 
