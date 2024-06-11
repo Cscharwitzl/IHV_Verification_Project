@@ -27,8 +27,8 @@ begin
   begin
 
     -- apply default values
-    pins_io.scl <= '1';
-    pins_io.sda <= '1';
+    pins_io.scl <= 'Z'; -- When no bus transfer is ongoing, SCL/SDA <= high Z
+    pins_io.sda <= 'Z';
     --
     wait for 0 ns;
 
