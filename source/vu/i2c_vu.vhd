@@ -20,22 +20,23 @@ end entity;
 
 
 architecture rtl of i2c_vu is
-  procedure send_ack is
+  procedure send_ack (signal pins_io : inout I2cPinoutT) is
   begin
     wait until not pins_io.scl;
     pins_io.sda <= '0';
   end procedure;
 
-  procedure read(
+  procedure perform_read(
     signal dev_addr : out std_logic_vector(6 downto 0);
     signal reg_addr : out std_logic_vector(6 downto 0);
-    signal data : in std_logic_vector(63 downto 0)
+    signal pins_io : inout I2cPinoutT;
+    signal data : in std_logic_vector(31 downto 0)
   ) is
   variable i, j : integer;
   variable received_nack : boolean;
   begin
     -- wait for i2c start condition
-    wait until pins_io.scl and falling_edge(pins_io.sda);
+    wait until pins_io.scl='1' and falling_edge(pins_io.sda);
 
     i := 0;
     read_dev_addr_loop: loop -- read device address
@@ -50,7 +51,7 @@ architecture rtl of i2c_vu is
     wait until rising_edge(pins_io.scl);
     -- TODO test if pin_io.sda is low as per requirements
 
-    send_ack;
+    send_ack(pins_io);
 
     i := 0;
     read_reg_addr_loop: loop -- read register address
@@ -62,9 +63,9 @@ architecture rtl of i2c_vu is
       end if;
     end loop;
 
-    send_ack;
+    send_ack(pins_io);
 
-    wait until pins_io.scl and falling_edge(pins_io.sda);
+    wait until pins_io.scl='1' and falling_edge(pins_io.sda);
     
     -- master sends the slave address again (TODO make sure its the same as the previous?)
 
@@ -81,7 +82,7 @@ architecture rtl of i2c_vu is
     wait until rising_edge(pins_io.scl);
     -- TODO test if pin_io.sda is high as per requirements
 
-    send_ack;
+    send_ack(pins_io);
 
     -- send the data
     for i in data'range loop
@@ -103,7 +104,7 @@ architecture rtl of i2c_vu is
     end if;
 
     -- wait for stop condition
-    wait until pins_io.scl and rising_edge(pins_io.sda);
+    wait until pins_io.scl='1' and rising_edge(pins_io.sda);
 
   end procedure;
 begin
@@ -144,7 +145,7 @@ begin
         -- WRITE_OP END 
 
         when READ_OP =>
-          read(dev_addr, reg_addr, trans_io.DataToModel);
+          perform_read(dev_addr, reg_addr, pins_io, trans_io.DataToModel);
         -- READ_OP END
 
         when others =>
