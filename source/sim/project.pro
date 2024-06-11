@@ -14,4 +14,6 @@ analyze dut_test_ctrl.vhd
 analyze dut_harness.vhd
 analyze tb_dut.vhd
 
-simulate tb_dut
+RunTest tb_avmm.vhd
+
+#simulate tb_dut

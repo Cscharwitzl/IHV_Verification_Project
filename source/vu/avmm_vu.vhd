@@ -24,7 +24,6 @@ begin
     -- apply default values to the pins
     pins_io.address <= (pins_io.address'range => '0');
     pins_io.writedata <= (pins_io.writedata'range => '0');
-    pins_io.readdata <= (pins_io.readdata'range => '0');
     pins_io.byteenable <= (pins_io.byteenable'range => '0');
     pins_io.read <= '0';
     pins_io.write <= '0';
@@ -51,7 +50,7 @@ begin
           pins_io.byteenable <= std_logic_vector(to_unsigned(trans_io.IntToModel, pins_io.byteenable'length));
           pins_io.read <= '1';
           pins_io.write <= '0';
-          WaitForClock(clk_i, 2);
+          WaitForClock(clk_i,2);
           trans_io.DataFromModel <= SafeResize(pins_io.readdata, trans_io.DataFromModel'length);
           WaitForClock(clk_i);
           pins_io.read <= '0';
