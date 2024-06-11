@@ -107,6 +107,65 @@ architecture rtl of i2c_vu is
     wait until pins_io.scl='1' and rising_edge(pins_io.sda);
 
   end procedure;
+
+  procedure perform_write (
+    signal dev_addr : out std_logic_vector(6 downto 0);
+    signal reg_addr : out std_logic_vector(6 downto 0);
+    signal pins_io : inout I2cPinoutT;
+    signal data : out std_logic_vector(31 downto 0)
+  ) is
+    variable i, j : integer;
+    variable received_stop : boolean;
+  begin
+    -- wait for i2c start condition
+    wait until pins_io.scl='1' and falling_edge(pins_io.sda);
+
+    i := 0;
+    read_dev_addr_loop: loop -- read device address
+      wait until rising_edge(pins_io.scl);
+      dev_addr(i) <= pins_io.sda;
+      i := i + 1;
+      if i = 7 then
+        exit read_dev_addr_loop;
+      end if;
+    end loop;
+
+    wait until rising_edge(pins_io.scl);
+    -- TODO test if pin_io.sda is low as per requirements
+
+    send_ack(pins_io);
+
+    i := 0;
+    read_reg_addr_loop: loop -- read register address
+      wait until rising_edge(pins_io.scl);
+      reg_addr(i) <= pins_io.sda;
+      i := i + 1;
+      if i = 7 then
+        exit read_reg_addr_loop;
+      end if;
+    end loop;
+
+    send_ack(pins_io);
+
+    -- receive the data until the stop condition
+    -- send the data
+    for i in data'range loop
+      for j in 7 downto 0 loop
+        wait until rising_edge(pins_io.scl);
+        data(i*8+j) <= pins_io.sda;
+        wait until rising_edge(pins_io.sda) or falling_edge(pins_io.scl);
+        if rising_edge(pins_io.sda) then
+          received_stop := true;
+          exit;
+        end if;
+      end loop;
+      if received_stop then
+        exit;
+      end if;
+    end loop;
+
+  end procedure;
+
 begin
 
   --------------------------
@@ -129,19 +188,7 @@ begin
       case trans_io.Operation is
 
         when WRITE_OP =>
-          -- start condition
-          pins_io.sda <= '0';
-          wait for 0.6 us;
-
-          -- data loop
-          for value in trans_io.Address'range loop
-            pins_io.sda <= '0';
-          end loop;
-
-          -- stop condition
-          pins_io.scl <= '1';
-          wait for 0.6 us;
-          pins_io.sda <= '1';
+          perform_write(dev_addr, reg_addr, pins_io, trans_io.DataFromModel);
         -- WRITE_OP END 
 
         when READ_OP =>
