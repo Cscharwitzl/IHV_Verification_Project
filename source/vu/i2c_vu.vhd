@@ -18,66 +18,26 @@ entity i2c_vu is
 end entity;
 
 architecture rtl of i2c_vu is
-  procedure send_ack(signal pins_io : inout I2cPinoutT) is
-  begin
-    wait until not pins_io.scl;
-    pins_io.sda <= '0';
-  end procedure;
 
   procedure perform_read(
-      signal dev_addr : out   std_logic_vector(6 downto 0);
-      signal reg_addr : out   std_logic_vector(6 downto 0);
+      variable dev_addr : out   std_logic_vector(6 downto 0);
+      variable reg_addr : out   std_logic_vector(6 downto 0);
       signal pins_io  : inout I2cPinoutT;
-      signal data     : in    std_logic_vector(31 downto 0)
+      signal data     : in    std_logic_vector(63 downto 0)
     ) is
     variable i, j          : integer;
     variable received_nack : boolean;
   begin
-    -- wait for i2c start condition
-    wait until pins_io.scl = '1' and falling_edge(pins_io.sda);
+    I2CWaitForStart(pins_io);
 
-    i := 0;
-    read_dev_addr_loop: loop -- read device address
-      wait until rising_edge(pins_io.scl);
-      dev_addr(i) <= pins_io.sda;
-      i := i + 1;
-      if i = 7 then
-        exit read_dev_addr_loop;
-      end if;
-    end loop;
+    I2CReadAddress(pins_io, dev_addr);
 
-    wait until rising_edge(pins_io.scl);
-    -- TODO test if pin_io.sda is low as per requirements
-    send_ack(pins_io);
+    I2CReadAddress(pins_io, reg_addr, true);
 
-    i := 0;
-    read_reg_addr_loop: loop -- read register address
-      wait until rising_edge(pins_io.scl);
-      reg_addr(i) <= pins_io.sda;
-      i := i + 1;
-      if i = 7 then
-        exit read_reg_addr_loop;
-      end if;
-    end loop;
+    I2CWaitForStart(pins_io);
 
-    send_ack(pins_io);
-
-    wait until pins_io.scl = '1' and falling_edge(pins_io.sda);
-
-    -- master sends the slave address again (TODO make sure its the same as the previous?)
-    i := 0;
-    read_reg2_loop: loop -- read data
-      wait until rising_edge(pins_io.scl);
-      reg_addr(i) <= pins_io.sda;
-      i := i + 1;
-      if i = 7 then
-        exit read_reg2_loop;
-      end if;
-    end loop;
-
-    wait until rising_edge(pins_io.scl);
-    -- TODO test if pin_io.sda is high as per requirements
-    send_ack(pins_io);
+    -- master sends the slave address again TODO make sure its the same as last time
+    I2CReadAddress(pins_io, dev_addr, expected_suffix => '1');
 
     -- send the data
     for i in data'range loop
@@ -98,53 +58,24 @@ architecture rtl of i2c_vu is
       Alert("Device tried to read more then 64 bits");
     end if;
 
-    -- wait for stop condition
-    wait until pins_io.scl = '1' and rising_edge(pins_io.sda);
+    I2CWaitForStop(pins_io);
 
   end procedure;
 
   procedure perform_write(
-      signal dev_addr : out   std_logic_vector(6 downto 0);
-      signal reg_addr : out   std_logic_vector(6 downto 0);
+      variable dev_addr : out   std_logic_vector(6 downto 0);
+      variable reg_addr : out   std_logic_vector(6 downto 0);
       signal pins_io  : inout I2cPinoutT;
       signal data     : out   std_logic_vector(31 downto 0)
     ) is
     variable i, j          : integer;
     variable received_stop : boolean;
   begin
-    -- wait for i2c start condition
-    wait until pins_io.scl = '1' and falling_edge(pins_io.sda);
+    I2CWaitForStart(pins_io);
 
-    -- i := 0;
-    -- read_dev_addr_loop: loop -- read device address
-    --   wait until rising_edge(pins_io.scl);
-    --   dev_addr(i) <= pins_io.sda;
-    --   i := i + 1;
-    --   if i = 7 then
-    --     exit read_dev_addr_loop;
-    --   end if;
-    -- end loop;
+    I2CReadAddress(pins_io, dev_addr);
 
-    read_dev_addr_loop: for i in 5 downto 0 loop
-      wait until rising_edge(pins_io.scl);
-      dev_addr(i) <= pins_io.sda;
-    end loop;
-
-    wait until rising_edge(pins_io.scl);
-    -- TODO test if pin_io.sda is low as per requirements
-    send_ack(pins_io);
-
-    i := 0;
-    read_reg_addr_loop: loop -- read register address
-      wait until rising_edge(pins_io.scl);
-      reg_addr(i) <= pins_io.sda;
-      i := i + 1;
-      if i = 7 then
-        exit read_reg_addr_loop;
-      end if;
-    end loop;
-
-    send_ack(pins_io);
+    I2CReadAddress(pins_io, dev_addr, true);
 
     -- receive the data until the stop condition
     -- send the data
