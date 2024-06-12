@@ -2,14 +2,15 @@
 <LicenseInfo
   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
   xmlns:xsd="http://www.w3.org/2001/XMLSchema">
-  <ExpirationDate>2022-09-23T23:59:00</ExpirationDate>
+  <ExpirationDate>2024-09-20T23:59:00</ExpirationDate>
   <Type>Educational</Type>
-  <DateIssued>2022-03-24T14:19:38</DateIssued>
+  <DateIssued>2024-03-21T16:49:42</DateIssued>
   <SerialNumber>
-    e-d647e020-20350cae-c036f34a-3ea4a926
+    e-66738050-60fb0c3e-a0d57582-0168d520
   </SerialNumber>
   <Products>All</Products>
   <Features>All</Features>
+  <LicenseCount>1</LicenseCount>
   <Contact>
     <Name>Markus Ferringer</Name>
     <Address></Address>
@@ -25,7 +26,7 @@
   </Locks>
 </LicenseInfo>
 --- SIGNATURE ---
-I/VBsLSPyMU71LUnd42+5a81tTkUrbxib7ijnG1cPJW
-LXOUP5pihV8670Cbztyqxm8Bikb9N3JgyA4DDrEPssh
-j7yKoqVqmCdfJGAD2AEEu8zA7cH795tfpDa/pTBKY8S
-VKGwLaB8E4qLWUnvQAuCurXnzfqHxeqLv+OMsDa2wI=
+bWXBvOuUgbS+HvCQ3Sg5vH1Z/fFJvAKYW06jxOOq2tL
+gcVl2fYCfdXuOHwo1v9xLZESIHaouGx+97ExXpOkeyH
+vnM9dEwSCGp3zgSar76wTfaTEzlP0ecIR59NDWUd8HX
+SOsH1ciMaoSJ1GDY81k8n0Ckxf+vSj8N6Y3ATTcCuY=
