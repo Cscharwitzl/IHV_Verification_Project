@@ -13,7 +13,7 @@ package i2c_pkg is
   end record;
 
   type I2cPinoutTArray is array(natural range<>) of I2cPinoutT;
-  type AddressBusRecTypeArray is array(natural range<>) of AddressBusRecType(Address(5 downto 0), DataToModel(31 downto 0), DataFromModel(31 downto 0));
+  type AddressBusRecTypeArray is array(natural range<>) of AddressBusRecType(Address(6 downto 0), DataToModel(63 downto 0), DataFromModel(63 downto 0));
 
   procedure I2CReadBit(signal pins: in I2cPinoutT; variable value: out std_logic);
   procedure I2CReadAck(signal pins: in I2cPinoutT; variable was_ack: out boolean);
