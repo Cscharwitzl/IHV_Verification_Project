@@ -19,7 +19,7 @@ package i2c_pkg is
   type AddressBusRecTypeArray is array(natural range<>) of AddressBusRecType(Address(6 downto 0), DataToModel(63 downto 0), DataFromModel(63 downto 0));
 
   procedure I2CReadBit(signal pins: in I2cPinoutT; variable value: out std_logic);
-  procedure I2CReadAck(signal pins: in I2cPinoutT; variable was_ack: out boolean);
+  procedure I2CReadAck(signal pins: inout I2cPinoutT; variable was_ack: out boolean);
   procedure I2CWriteAck(signal pins: inout I2cPinoutT);
 
   procedure I2CWaitForStart(signal pins: in I2cPinoutT);
@@ -46,18 +46,17 @@ package body i2c_pkg is
     value := pins.sda;
   end procedure;
 
-  procedure I2CReadAck(signal pins: in I2cPinoutT; variable was_ack: out boolean) is
+  procedure I2CReadAck(signal pins: inout I2cPinoutT; variable was_ack: out boolean) is
   begin
+    pins.sda <= 'H';
     wait until rising_edge(pins.scl);
-    -- pins.sda <= 'H';
-    wait until pins.sda = '0' or falling_edge(pins.scl);
     was_ack := TRUE when pins.sda = '0' else FALSE;
   end procedure;
 
   procedure I2CWriteAck(signal pins: inout I2cPinoutT) is
   begin
-    wait until rising_edge(pins.scl);
     pins.sda <= '0';
+    wait until rising_edge(pins.scl);
   end procedure;
 
   procedure I2CWaitForStart(signal pins: in I2cPinoutT) is
