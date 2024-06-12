@@ -103,10 +103,6 @@ begin
     variable reg_addr : std_logic_vector(6 downto 0);
     variable data : std_logic_vector(63 downto 0);
   begin
-    -- apply default values
-    pins_io.scl <= 'Z'; -- When no bus transfer is ongoing, SCL/SDA <= high Z
-    pins_io.sda <= 'Z';
-    --
     wait for 0 ns;
     dispatcher_loop: loop
       WaitForTransaction(clk => clk_i, Rdy => trans_io.Rdy, Ack => trans_io.Ack);
