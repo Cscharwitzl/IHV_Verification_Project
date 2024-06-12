@@ -23,7 +23,7 @@ architecture rtl of i2c_vu is
       variable dev_addr : out   std_logic_vector(6 downto 0);
       variable reg_addr : out   std_logic_vector(6 downto 0);
       signal pins_io  : inout I2cPinoutT;
-      signal data     : in    std_logic_vector(63 downto 0)
+      variable data     : in    std_logic_vector(63 downto 0)
     ) is
     variable i, j          : integer;
     variable received_nack : boolean;
@@ -66,7 +66,7 @@ architecture rtl of i2c_vu is
       variable dev_addr : out   std_logic_vector(6 downto 0);
       variable reg_addr : out   std_logic_vector(6 downto 0);
       signal pins_io  : inout I2cPinoutT;
-      signal data     : out   std_logic_vector(31 downto 0)
+      variable data     : out   std_logic_vector(63 downto 0)
     ) is
     variable i, j          : integer;
     variable received_stop : boolean;
@@ -82,7 +82,7 @@ architecture rtl of i2c_vu is
     for i in data'range loop
       for j in 7 downto 0 loop
         wait until rising_edge(pins_io.scl);
-        data(i * 8 + j) <= pins_io.sda;
+        data(i * 8 + j) := pins_io.sda;
         wait until rising_edge(pins_io.sda) or falling_edge(pins_io.scl);
         if rising_edge(pins_io.sda) then
           received_stop := true;
@@ -101,6 +101,7 @@ begin
   sequencer_p: process is
     variable dev_addr : std_logic_vector(6 downto 0);
     variable reg_addr : std_logic_vector(6 downto 0);
+    variable data : std_logic_vector(63 downto 0);
   begin
     -- apply default values
     pins_io.scl <= 'Z'; -- When no bus transfer is ongoing, SCL/SDA <= high Z
@@ -111,11 +112,13 @@ begin
       WaitForTransaction(clk => clk_i, Rdy => trans_io.Rdy, Ack => trans_io.Ack);
       case trans_io.Operation is
         when WRITE_OP =>
-          perform_write(dev_addr, reg_addr, pins_io, trans_io.DataFromModel);
+          perform_write(dev_addr, reg_addr, pins_io, data);
+          trans_io.DataFromModel <= std_logic_vector_max_c(data);
           -- WRITE_OP END 
 
         when READ_OP =>
-          perform_read(dev_addr, reg_addr, pins_io, trans_io.DataToModel);
+          data := std_logic_vector(trans_io.DataToModel);
+          perform_read(dev_addr, reg_addr, pins_io, data);
           -- READ_OP END
 
         when others =>
