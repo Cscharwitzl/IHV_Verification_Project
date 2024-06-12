@@ -50,9 +50,8 @@ begin
           pins_io.byteenable <= std_logic_vector(to_unsigned(trans_io.IntToModel, pins_io.byteenable'length));
           pins_io.read <= '1';
           pins_io.write <= '0';
-          WaitForClock(clk_i,2);
+          WaitForClock(clk_i, 2);
           trans_io.DataFromModel <= SafeResize(pins_io.readdata, trans_io.DataFromModel'length);
-          WaitForClock(clk_i);
           pins_io.read <= '0';
         -- READ_OP END
 
