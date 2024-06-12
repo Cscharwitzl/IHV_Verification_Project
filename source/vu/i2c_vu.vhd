@@ -5,9 +5,11 @@ library ieee;
 
 library osvvm;
 context osvvm.OsvvmContext;
+  use osvvm.AlertLogPkg.all ;
 
 library osvvm_common;
 context osvvm_common.OsvvmCommonContext;
+  
 
 entity i2c_vu is
   port (
@@ -95,8 +97,71 @@ architecture rtl of i2c_vu is
     end loop;
 
   end procedure;
-
+  
 begin
+
+  timing_p: process (pins_io.scl, pins_io.sda) is
+    constant LOW_TIME : time := 1.3 us;
+    constant HIGH_TIME : time := 0.6 us;
+    constant START_HOLD_TIME : time := 0.6 us;
+    constant START_SETUP_TIME : time := 0.6 us;
+    constant STOP_SETUP_TIME : time := 0.6 us;
+    constant STOP_START_IDLE_TIME : time := 1.3 us;
+    constant DATA_SETUP_TIME : time := 100 ns;
+    variable start_cond_met : boolean := false;
+    variable start_cond_time: time := 0 us;
+    variable stop_cond_time: time := 0 us;
+    variable data_change_met : boolean := false;
+  begin
+    -- CHECKS FOR SCL LOW/HIGH TIME AND DATA SETUP TIME
+    if pins_io.scl'event then
+      if pins_io.scl = '1' then
+        AlertIfNot(pins_io.scl'last_event >= LOW_TIME, "I2C SCL LOW time of >=1.3 us was not met");
+        -- if a start was currently going on but the sda had no change in the meantime,
+        -- that means sda signal simply stayed low until the new rising clock edge, so start has completed
+        if start_cond_met then
+          start_cond_met := false;
+        end if;
+
+        if data_change_met then
+          data_change_met := false;
+          AlertIfNot((now - pins_io.sda'last_event) >= DATA_SETUP_TIME, "I2C DATA SETUP time of >= 100 ns was not met");
+        end if;
+
+      elsif pins_io.scl = '0' then
+        AlertIfNot(pins_io.scl'last_event >= HIGH_TIME, "I2C SCL HIGH time of >=0.6 us was not met");
+      end if;
+    end if;
+
+    -- CHECKS FOR START/STOP CONDITIONS
+    if pins_io.sda'event then
+      if pins_io.sda'last_value = '0' or pins_io.sda'last_value = '1' then
+        -- ignore other kinds of changes for now
+        if pins_io.scl = '1' then
+          -- there is currently either a start or stop happening
+          if pins_io.sda = '1' then
+            -- encountered stop condition, check when the clock change was to see if setup time was met
+            AlertIfNot((now - pins_io.scl'last_event) >= STOP_SETUP_TIME, "I2C STOP SETUP time of >= 0.6 us was not met");
+            stop_cond_time := now;
+          elsif pins_io.sda = '0' then
+            -- encountered start condition
+            start_cond_met := true;
+            start_cond_time := now;
+            AlertIfNot((now - pins_io.scl'last_event) >= START_SETUP_TIME, "I2C START SETUP time of >= 0.6 us was not met");
+            -- check if the previous stop signal was more than STOP_START_IDLE_TIME
+            AlertIfNot((now - stop_cond_time) >= STOP_START_IDLE_TIME, "I2C Idle time between STOP and following START of >= 1.3 us was not met");
+          end if;
+        elsif pins_io.scl = '0' then
+           -- clock is currently low, check if there was a start going
+          if start_cond_met then
+            AlertIfNot((now - start_cond_time) >= START_HOLD_TIME, "I2C START HOLD time of >= 0.6 us was not met");
+            start_cond_met := false;
+          end if;
+          data_change_met := true;
+        end if;
+      end if;
+    end if;
+  end process;
 
   sequencer_p: process is
     variable dev_addr : std_logic_vector(6 downto 0);
