@@ -19,7 +19,7 @@ package avmm_pkg is
     write              : std_logic;
   end record;
 
-  type stdlvArrayT is array(natural range <>) of std_logic_vector(31 downto 0);
+  type DataRegArrayT is array(natural range <>) of std_logic_vector(31 downto 0);
 
   procedure AvmmWrite(signal trans: inout AddressBusRecType; addr, data, byte_enable: std_logic_vector);
   procedure AvmmRead(signal trans: inout AddressBusRecType; addr, byte_enable: std_logic_vector; variable read_data: out std_logic_vector);
@@ -30,7 +30,7 @@ package avmm_pkg is
     reg_addr: in std_logic_vector(7 downto 0);
     target_addr: in std_logic_vector(6 downto 0);
     data_len: in integer;
-    read_data: in stdlvArrayT(15 downto 0) := (others => (others => '0')));
+    read_data: in DataRegArrayT(15 downto 0) := (others => (others => '0')));
 
 end package;
 
@@ -55,7 +55,7 @@ package body avmm_pkg is
      reg_addr : in std_logic_vector(7 downto 0);
      target_addr : in std_logic_vector(6 downto 0);
      data_len : in integer;
-     read_data : in stdlvArrayT(15 downto 0) := (others => (others => '0'))) is
+     read_data : in DataRegArrayT(15 downto 0) := (others => (others => '0'))) is
     variable reg : std_logic_vector(31 downto 0) := (others => '0');
   begin
 

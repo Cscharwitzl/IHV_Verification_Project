@@ -37,7 +37,7 @@ begin
   stimuli_p: process is
     variable addr      : std_logic_vector(6 downto 0);
     variable byte_en   : std_logic_vector(3 downto 0);
-    variable data : stdlvArrayT(15 downto 0) := (others => (others => '0'));
+    variable data : DataRegArrayT(15 downto 0) := (others => (others => '0'));
   begin
 
     wait until rst_o = '0';
@@ -46,13 +46,17 @@ begin
 
     Log("*** Start of Tests (AVMM) ***");
 
-    data(1) := x"00_00_AA_55";
-    startI2CTransfereInAVMM(avmm_trans_io,'0',3,x"AA","1010101",2,data);
-
-    Log("*** End of Tests (AVMM) ***");
+    data(0) := x"22_FF_AA_55";
+    startI2CTransfereInAVMM(avmm_trans_io,'0',3,x"AA","1010101",1,data);
     
-    WaitForBarrier(test_done, 4 ms);
+    WaitForBarrier(test_done);
+
+    startI2CTransfereInAVMM(avmm_trans_io,'0',3,x"55","0101010",2,data);
+    Log("*** End of Tests (AVMM) ***");
     Log("*** End of Testbench ***");
+
+    WaitForBarrier(test_done);
+
     std.env.stop;
   end process;
 
@@ -67,13 +71,21 @@ begin
 
     -- PoC
     addr := "0100000";
-    data := x"AA_AA_AA_AA_AA_AA_AA_AA";
+    data := x"00_00_00_00_22_FF_AA_55";
     I2CRead(i2c_trans_io(3), addr, data_read);
     AffirmIfEqual(data_read, data, "Test failed for addr " & to_hstring(addr));
 
-    Log("*** End of Tests (I2C) ***");
+    WaitForBarrier(test_done);
+    test_done <= 1;
+
+    I2CRead(i2c_trans_io(3), addr, data_read);
+    AffirmIfEqual(data_read, data, "Test failed for addr " & to_hstring(addr));
 
     WaitForBarrier(test_done);
+
+    Log("*** End of Tests (I2C) ***");
+
+    
     wait;
   end process;
 

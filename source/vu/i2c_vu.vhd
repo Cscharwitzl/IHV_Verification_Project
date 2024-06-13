@@ -24,7 +24,7 @@ architecture rtl of i2c_vu is
   type data_t is array (integer range 0 to 63) of std_logic_vector(7 downto 0);
 
   function flatten(arr: data_t) return std_logic_vector is
-    variable res : std_logic_vector((64*8)-1 downto 0);
+    variable res : std_logic_vector((64*8)-1 downto 0) := (others => '0');
   begin
     for i in data_t'range loop
       res(8*(i+1)-1 downto 8*i) := arr(i);
@@ -42,18 +42,19 @@ architecture rtl of i2c_vu is
     variable sda_at_start : std_logic;
   begin
     wait until pins.scl = 'Z';
-    sda_at_start := pins.sda;
+    sda_at_start := '1' when pins.sda = 'Z' else '0';
     wait until pins.sda'event or pins.scl = '0';
     if pins.scl = 'Z' then
       if pins.sda = '0' then
         value := (I2C_START, 'X');
+        wait until pins.scl = '0';
       elsif pins.sda = 'Z' then
         value := (I2C_STOP, 'X');
       else
         Alert("I2CReadBit: SDA changed to bogus value during high SCL: " & to_string(sda_at_start) & " -> " & to_string(pins.sda));
         value := (I2C_VALUE, pins.sda);
       end if;
-      wait until pins.scl = '0';
+      
     else
       value := (I2C_VALUE, sda_at_start);
     end if;
@@ -76,8 +77,8 @@ architecture rtl of i2c_vu is
   procedure perform_read(
       signal   pins_io  : inout I2cPinoutT;
       variable dev_addr : out   std_logic_vector(6 downto 0);
-      variable reg_addr : out   std_logic_vector(6 downto 0);
-      variable data     : out   std_logic_vector(63 downto 0)
+      variable reg_addr : out   std_logic_vector(7 downto 0);
+      variable data     : out   std_logic_vector(64*8-1 downto 0)
     ) is
     variable b : I2cValueRec;
     variable d: data_t;
@@ -101,14 +102,16 @@ architecture rtl of i2c_vu is
 
     -- Read register address
     I2CReadInto(pins_io, reg_addr, err);
+    Log("now1" & boolean'image(err));
     if err then
       return;
     end if;
     I2CWriteAck(pins_io);
-
+     Log("now2");
     -- Read data
     for i in d'range loop
       I2CReadInto(pins_io, byte, err);
+      Log("now3" & boolean'image(err));
       if err then
         return;
       end if;
@@ -219,8 +222,8 @@ begin
 
   sequencer_p: process is
     variable dev_addr : std_logic_vector(6 downto 0);
-    variable reg_addr : std_logic_vector(6 downto 0);
-    variable data     : std_logic_vector(63 downto 0);
+    variable reg_addr : std_logic_vector(7 downto 0);
+    variable data     : std_logic_vector(64*8-1 downto 0) := (others => '0');
   begin
     pins_io.scl <= 'Z';
     pins_io.sda <= 'Z';
@@ -229,7 +232,7 @@ begin
       WaitForTransaction(clk => clk_i, Rdy => trans_io.Rdy, Ack => trans_io.Ack);
       case trans_io.Operation is
         when WRITE_OP =>
-          perform_write(dev_addr, reg_addr, pins_io, data);
+          --perform_write(dev_addr, reg_addr, pins_io, data);
           trans_io.DataFromModel <= std_logic_vector_max_c(data);
           -- WRITE_OP END 
         when READ_OP =>
