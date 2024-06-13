@@ -21,6 +21,17 @@ end entity;
 
 architecture rtl of i2c_vu is
 
+  type data_t is array (integer range 0 to 63) of std_logic_vector(7 downto 0);
+
+  function flatten(arr: data_t) return std_logic_vector is
+    variable res : std_logic_vector((64*8)-1 downto 0);
+  begin
+    for i in data_t'range loop
+      res(8*(i+1)-1 downto 8*i) := arr(i);
+    end loop;
+    return res;
+  end function;
+
   type I2cBitT is (I2C_VALUE, I2C_START, I2C_STOP);
   type I2cValueRec is record
     bit_type : I2cBitT;
@@ -48,56 +59,20 @@ architecture rtl of i2c_vu is
     end if;
   end procedure;
 
-  procedure I2CReadNBits(signal pins : in I2cPinoutT; variable n : in integer; variable read_data : out std_logic_vector; variable error : out boolean := false) is
-    variable result : std_logic_vector(n-1 downto 0);
+  procedure I2CReadInto(signal pins : in I2cPinoutT; variable read_data : out std_logic_vector; variable error : out boolean) is
     variable b : I2cValueRec;
   begin
-    for i in n-1 downto 0 loop
+    for i in read_data'range loop
       I2CReadBit(pins, b);
       if b.bit_type /= I2C_VALUE then
         Alert("I2CReadNBits: Recieved " & to_string(b.bit_type) & " but expected VALUE.");
         error := true;
         return;
       end if;
-      result(i) := b.value;
+      read_data(i) := b.value;
     end loop;
-    read_data := result;
   end procedure;
 
-  -- procedure perform_read(
-  --     variable dev_addr : out   std_logic_vector(6 downto 0);
-  --     variable reg_addr : out   std_logic_vector(6 downto 0);
-  --     signal pins_io  : inout I2cPinoutT;
-  --     variable data     : in    std_logic_vector(63 downto 0)
-  --   ) is
-  --   variable i, j          : integer;
-  --   variable received_nack : boolean;
-  -- begin
-  --   I2CWaitForStart(pins_io);
-  --   I2CReadAddress(pins_io, dev_addr);
-  --   I2CReadAddress(pins_io, reg_addr, true);
-  --   I2CWaitForStart(pins_io);
-  --   -- master sends the slave address again TODO make sure its the same as last time
-  --   I2CReadAddress(pins_io, dev_addr, expected_suffix => '1');
-  --   -- send the data
-  --   for i in data'range loop
-  --     for j in 7 downto 0 loop
-  --       wait until not pins_io.scl;
-  --       pins_io.sda <= data(i * 8 + j);
-  --       wait until rising_edge(pins_io.scl);
-  --     end loop;
-  --     if pins_io.sda = '1' then -- NACK
-  --       received_nack := true;
-  --       exit;
-  --     end if;
-  --   end loop;
-  --   if not received_nack then
-  --     -- something went wrong
-  --     -- device tried to read more then 64 bits which is not allowed
-  --     Alert("Device tried to read more then 64 bits");
-  --   end if;
-  --   I2CWaitForStop(pins_io);
-  -- end procedure;
   procedure perform_read(
       signal   pins_io  : inout I2cPinoutT;
       variable dev_addr : out   std_logic_vector(6 downto 0);
@@ -105,16 +80,15 @@ architecture rtl of i2c_vu is
       variable data     : out   std_logic_vector(63 downto 0)
     ) is
     variable b : I2cValueRec;
-    type data_t is array (integer range 0 to 7) of std_logic_vector(7 downto 0);
     variable d: data_t;
     variable byte : std_logic_vector(7 downto 0);
-    variable err, stop : boolean;
+    variable err : boolean;
   begin
     Log("*** Waiting for I2C start ***");
     I2CWaitForStart(pins_io);
 
     -- Read slave address and 0
-    I2CReadNBits(pins_io, dev_addr'length, dev_addr, err);
+    I2CReadInto(pins_io, dev_addr, err);
     if err then
       return;
     end if;
@@ -126,7 +100,7 @@ architecture rtl of i2c_vu is
     I2CWriteAck(pins_io);
 
     -- Read register address
-    I2CReadNBits(pins_io, reg_addr'length, reg_addr, err);
+    I2CReadInto(pins_io, reg_addr, err);
     if err then
       return;
     end if;
@@ -134,16 +108,16 @@ architecture rtl of i2c_vu is
 
     -- Read data
     for i in d'range loop
-      I2CReadNBits(pins_io, 8, byte, err);
+      I2CReadInto(pins_io, byte, err);
       if err then
         return;
       end if;
       d(i) := byte;
       I2CWriteAck(pins_io);
-      data := d.all;
+      data := flatten(d);
     end loop;
-
   end procedure;
+
 
   procedure perform_write(
       variable dev_addr : out   std_logic_vector(6 downto 0);
