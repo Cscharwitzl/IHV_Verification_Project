@@ -49,19 +49,19 @@ package body i2c_pkg is
   procedure I2CReadBit(signal pins : in I2cPinoutT; variable value : out I2cBusValueRec) is
     variable value_start : std_logic;
   begin
-    wait until rising_edge(pins.scl);
+    wait until pins.scl = 'Z';
     value_start := pins.sda;
-    wait until pins.sda'event or falling_edge(pins.scl);
-    if pins.scl = '1' then
+    wait until pins.sda'event or pins.scl = '0';
+    if pins.scl = 'Z' then
       if pins.sda = '0' then
         value := (I2C_START, 'X');
-      elsif pins.sda = '1' then
+      elsif pins.sda = 'Z' then
         value := (I2C_STOP, 'X');
       else
         Alert("I2CReadBit: SDA changed to bogus value during high SCL: " & to_string(value_start) & " -> " & to_string(pins.sda));
         value := (I2C_VALUE, pins.sda);
       end if;
-      wait until falling_edge(pins.scl);
+      wait until pins.scl = '0';
     else
       value := (I2C_VALUE, value_start);
     end if;
@@ -77,13 +77,16 @@ package body i2c_pkg is
   procedure I2CWriteAck(signal pins : inout I2cPinoutT) is
   begin
     pins.sda <= '0';
-    wait until rising_edge(pins.scl);
+    wait until pins.scl = 'Z';
+    wait until pins.scl = '0';
+    pins.sda <= 'Z';
   end procedure;
 
   procedure I2CWaitForStart(signal pins : in I2cPinoutT) is
   begin
-    AffirmIfEqual(true, true, "I2C Specification violated. (Wrong pin state before START)"); -- TODO: enter correct pin state in assertion
-    wait until pins.scl = '1' and falling_edge(pins.sda);
+    AffirmIfEqual(pins.scl, 'Z', "I2C Specification violated. (Wrong pin state before START)"); -- TODO: enter correct pin state in assertion
+    AffirmIfEqual(pins.sda, 'Z', "I2C Specification violated. (Wrong pin state before START)"); -- TODO: enter correct pin state in assertion
+    wait until pins.sda = '0';
   end procedure;
 
   procedure I2CReadAddress(
@@ -132,7 +135,7 @@ package body i2c_pkg is
   procedure I2CWaitForStop(signal pins : in I2cPinoutT) is
   begin
     AffirmIfEqual(true, true, "I2C Specification violated. (Wrong pin state before START)"); -- TODO: enter correct pin state in assertion
-    wait until pins.scl = '1' and rising_edge(pins.sda);
+    wait until pins.scl = 'Z' and pins.sda = 'Z';
   end procedure;
 
   procedure I2CWrite(signal trans : inout AddressBusRecType; address, data : in std_logic_vector) is

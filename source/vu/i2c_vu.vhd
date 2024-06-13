@@ -82,25 +82,25 @@ architecture rtl of i2c_vu is
 
   procedure perform_write(
       variable dev_addr : out   std_logic_vector(6 downto 0);
-      variable reg_addr : out   std_logic_vector(6 downto 0);
-      signal   pins_io  : inout I2cPinoutT;
+      variable reg_addr : out   std_logic_vector(7 downto 0);
+      signal   pins  : inout I2cPinoutT;
       variable data     : out   std_logic_vector(63 downto 0)
     ) is
     variable i, j          : integer;
     variable received_stop : boolean;
   begin
-    I2CWaitForStart(pins_io);
-    I2CReadAddress(pins_io, dev_addr);
-    I2CReadAddress(pins_io, dev_addr, true);
+    I2CWaitForStart(pins);
+    I2CReadAddress(pins, dev_addr);
+    I2CReadAddress(pins, dev_addr, true);
 
     -- receive the data until the stop condition
     -- send the data
     for i in data'range loop
       for j in 7 downto 0 loop
-        wait until rising_edge(pins_io.scl);
-        data(i * 8 + j) := pins_io.sda;
-        wait until rising_edge(pins_io.sda) or falling_edge(pins_io.scl);
-        if rising_edge(pins_io.sda) then
+        wait until pins.scl = 'Z';
+        data(i * 8 + j) := pins.sda;
+        wait until pins.sda = 'Z' or pins.scl = '0';
+        if pins.sda = 'Z' then
           received_stop := true;
           exit;
         end if;
@@ -112,6 +112,8 @@ architecture rtl of i2c_vu is
   end procedure;
   
 begin
+
+
 
   timing_p: process (pins_io.scl, pins_io.sda) is
     constant LOW_TIME : time := 1.3 us;
@@ -181,6 +183,8 @@ begin
     variable reg_addr : std_logic_vector(6 downto 0);
     variable data     : std_logic_vector(63 downto 0);
   begin
+    pins_io.scl <= 'Z';
+    pins_io.sda <= 'Z';
     wait for 0 ns;
     dispatcher_loop: loop
       WaitForTransaction(clk => clk_i, Rdy => trans_io.Rdy, Ack => trans_io.Ack);

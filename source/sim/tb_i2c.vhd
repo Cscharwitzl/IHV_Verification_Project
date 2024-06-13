@@ -39,6 +39,8 @@ begin
     variable byte_en   : std_logic_vector(3 downto 0);
     variable read_data : std_logic_vector(31 downto 0);
   begin
+
+    wait until rst_o = '0';
     Log("*** Start of Testbench ***");
     WaitForBarrier(test_start);
 
@@ -54,17 +56,17 @@ begin
     AvmmRead(avmm_trans_io, x"00", byte_en, read_data);
     Log(to_string(read_data));
 
-    AvmmWrite(avmm_trans_io, x"02", x"00_00_00_0F", byte_en);
+    AvmmWrite(avmm_trans_io, x"02", x"00_00_00_01", byte_en);
 
     AvmmWrite(avmm_trans_io, x"10", x"44_33_22_11", byte_en);
     AvmmRead(avmm_trans_io, x"00", byte_en, read_data);
     Log(to_string(read_data));
 
-    AvmmWrite(avmm_trans_io, x"00", SetupControlReg(true, 0, x"00", "0000000", false, false, false), byte_en);
+    AvmmWrite(avmm_trans_io, x"00", SetupControlReg(true, 0, x"01", "0000001", false, false, false), "1000");
 
     Log("*** End of Tests (AVMM) ***");
-
-    WaitForBarrier(test_done, 10 us);
+    
+    WaitForBarrier(test_done, 4 ms);
     Log("*** End of Testbench ***");
     std.env.stop;
   end process;
@@ -81,12 +83,13 @@ begin
     -- PoC
     addr := "0100000";
     data := x"AA_AA_AA_AA_AA_AA_AA_AA";
-    I2CRead(i2c_trans_io(0), addr, data_read);
+    I2CRead(i2c_trans_io(3), addr, data_read);
     AffirmIfEqual(data_read, data, "Test failed for addr " & to_hstring(addr));
 
     Log("*** End of Tests (I2C) ***");
 
     WaitForBarrier(test_done);
+    wait;
   end process;
 
 end architecture;
