@@ -4,7 +4,7 @@ use work.avmm_pkg.all;
 use work.i2c_pkg.all;
 
 architecture tb_i2c_arc of dut_test_ctrl is
-
+  
   signal test_start : integer_barrier;
   signal test_done  : integer_barrier;
 
@@ -37,7 +37,7 @@ begin
   stimuli_p: process is
     variable addr      : std_logic_vector(6 downto 0);
     variable byte_en   : std_logic_vector(3 downto 0);
-    variable read_data : std_logic_vector(31 downto 0);
+    variable data : stdlvArrayT(15 downto 0) := (others => (others => '0'));
   begin
 
     wait until rst_o = '0';
@@ -46,23 +46,8 @@ begin
 
     Log("*** Start of Tests (AVMM) ***");
 
-    -- PoC
-    byte_en := "1111";
-    Log(to_string(SetupControlReg(false, 0, x"00", "0000000", false, false, true)));
-    AvmmWrite(avmm_trans_io, x"00", SetupControlReg(false, 0, x"00", "0000000", false, false, true), byte_en);
-
-    Log(to_string(SetupControlReg(false, 0, x"01", "0000001", false, false, false)));
-    AvmmWrite(avmm_trans_io, x"00", SetupControlReg(false, 0, x"01", "0000001", false, false, false), byte_en);
-    AvmmRead(avmm_trans_io, x"00", byte_en, read_data);
-    Log(to_string(read_data));
-
-    AvmmWrite(avmm_trans_io, x"02", x"00_00_00_01", byte_en);
-
-    AvmmWrite(avmm_trans_io, x"10", x"44_33_22_11", byte_en);
-    AvmmRead(avmm_trans_io, x"00", byte_en, read_data);
-    Log(to_string(read_data));
-
-    AvmmWrite(avmm_trans_io, x"00", SetupControlReg(true, 0, x"01", "0000001", false, false, false), "1000");
+    data(1) := x"00_00_AA_55";
+    startI2CTransfereInAVMM(avmm_trans_io,'0',3,x"AA","1010101",2,data);
 
     Log("*** End of Tests (AVMM) ***");
     
