@@ -21,6 +21,49 @@ end entity;
 
 architecture rtl of i2c_vu is
 
+  type I2cBitT is (I2C_VALUE, I2C_START, I2C_STOP);
+  type I2cValueRec is record
+    bit_type : I2cBitT;
+    value    : std_logic;
+  end record;
+
+  procedure I2CReadBit(signal pins : in I2cPinoutT; variable value : out I2cValueRec) is
+    variable sda_at_start : std_logic;
+  begin
+    wait until pins.scl = 'Z';
+    sda_at_start := pins.sda;
+    wait until pins.sda'event or pins.scl = '0';
+    if pins.scl = 'Z' then
+      if pins.sda = '0' then
+        value := (I2C_START, 'X');
+      elsif pins.sda = 'Z' then
+        value := (I2C_STOP, 'X');
+      else
+        Alert("I2CReadBit: SDA changed to bogus value during high SCL: " & to_string(sda_at_start) & " -> " & to_string(pins.sda));
+        value := (I2C_VALUE, pins.sda);
+      end if;
+      wait until pins.scl = '0';
+    else
+      value := (I2C_VALUE, sda_at_start);
+    end if;
+  end procedure;
+
+  procedure I2CReadNBits(signal pins : in I2cPinoutT; variable n : in integer; variable read_data : out std_logic_vector; variable error : out boolean := false) is
+    variable result : std_logic_vector(n-1 downto 0);
+    variable b : I2cValueRec;
+  begin
+    for i in n-1 downto 0 loop
+      I2CReadBit(pins, b);
+      if b.bit_type /= I2C_VALUE then
+        Alert("I2CReadNBits: Recieved " & to_string(b.bit_type) & " but expected VALUE.");
+        error := true;
+        return;
+      end if;
+      result(i) := b.value;
+    end loop;
+    read_data := result;
+  end procedure;
+
   -- procedure perform_read(
   --     variable dev_addr : out   std_logic_vector(6 downto 0);
   --     variable reg_addr : out   std_logic_vector(6 downto 0);
@@ -61,21 +104,43 @@ architecture rtl of i2c_vu is
       variable reg_addr : out   std_logic_vector(6 downto 0);
       variable data     : out   std_logic_vector(63 downto 0)
     ) is
+    variable b : I2cValueRec;
+    type data_t is array (integer range 0 to 7) of std_logic_vector(7 downto 0);
+    variable d: data_t;
     variable byte : std_logic_vector(7 downto 0);
-    variable stop : boolean;
+    variable err, stop : boolean;
   begin
     Log("*** Waiting for I2C start ***");
     I2CWaitForStart(pins_io);
-    I2CReadAddress(pins_io, dev_addr);
-    I2CReadAddress(pins_io, reg_addr, true);
 
-    -- read data
-    for i in (data'length / 8) - 1 downto 0 loop
-      I2CReadNextByte(pins_io, byte, stop);
-      if stop then
-        exit;
+    -- Read slave address and 0
+    I2CReadNBits(pins_io, dev_addr'length, dev_addr, err);
+    if err then
+      return;
+    end if;
+    I2CReadBit(pins_io, b);
+    if b.bit_type /= I2C_VALUE or b.value /= '0' then
+      Alert("I2CRead: Expected 0 but returned (" & to_string(b.bit_type) & ", " & to_string(b.value) & ").");
+      return;
+    end if; 
+    I2CWriteAck(pins_io);
+
+    -- Read register address
+    I2CReadNBits(pins_io, reg_addr'length, reg_addr, err);
+    if err then
+      return;
+    end if;
+    I2CWriteAck(pins_io);
+
+    -- Read data
+    for i in d'range loop
+      I2CReadNBits(pins_io, 8, byte, err);
+      if err then
+        return;
       end if;
-      data(i * 8 + 7 downto i * 8) := byte;
+      d(i) := byte;
+      I2CWriteAck(pins_io);
+      data := d.all;
     end loop;
 
   end procedure;
@@ -90,8 +155,8 @@ architecture rtl of i2c_vu is
     variable received_stop : boolean;
   begin
     I2CWaitForStart(pins);
-    I2CReadAddress(pins, dev_addr);
-    I2CReadAddress(pins, dev_addr, true);
+    --I2CReadAddress(pins, dev_addr);
+    --I2CReadAddress(pins, dev_addr, true);
 
     -- receive the data until the stop condition
     -- send the data
