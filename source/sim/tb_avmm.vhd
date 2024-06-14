@@ -3,7 +3,7 @@ context common_lib.common_context;
 use work.avmm_pkg.all;
 use osvvm.AlertLogPkg.all ;
 
-architecture tb_avmm of dut_test_ctrl is
+architecture tb_avmm_arc of dut_test_ctrl is
   
 begin
 
@@ -127,7 +127,7 @@ end architecture;
 configuration tb_avmm of dut_harness is
   for harness_arc
     for dut_test_ctrl_inst: dut_test_ctrl
-      use entity work.dut_test_ctrl(tb_avmm) ; 
+      use entity work.dut_test_ctrl(tb_avmm_arc) ; 
     end for; 
   end for; 
 end configuration;

@@ -15,6 +15,7 @@ analyze dut_harness.vhd
 analyze tb_dut.vhd
 
 #RunTest tb_avmm.vhd
-RunTest tb_i2c.vhd
+RunTest tb_i2c_read.vhd
+#RunTest tb_i2c_write.vhd
 
 #simulate tb_dut

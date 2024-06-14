@@ -317,6 +317,10 @@ begin
     wait for 0 ns;
     dispatcher_loop: loop
       WaitForTransaction(clk => clk_i, Rdy => trans_io.Rdy, Ack => trans_io.Ack);
+      data := (others => '0');
+      dev_addr := (others => '0');
+      reg_addr := (others => '0');
+
       case trans_io.Operation is
         when WRITE_OP =>
           data_length := trans_io.IntToModel;

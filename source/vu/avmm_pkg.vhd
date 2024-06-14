@@ -86,7 +86,7 @@ package body avmm_pkg is
   begin
     for i in data'range loop
       AvmmRead(trans,std_logic_vector(to_unsigned(i+16,6)),"1111",data_reg);
-      data(0) := data_reg;
+      data(i) := data_reg;
     end loop;
   end procedure;
 
