@@ -31,6 +31,8 @@ package avmm_pkg is
     target_addr: in std_logic_vector(6 downto 0);
     data_len: in integer;
     read_data: in DataRegArrayT(15 downto 0) := (others => (others => '0')));
+  procedure readDataRegs(signal trans: inout AddressBusRecType; data: out DataRegArrayT);
+  function DataRegArr_to_slv(datareg: DataRegArrayT) return std_logic_vector;
 
 end package;
 
@@ -69,7 +71,7 @@ package body avmm_pkg is
 
     --write controlreg and start
     reg(31) := '1';
-    reg(29 downto 24) := std_logic_vector(to_unsigned(data_len, 6));
+    reg(29 downto 24) := std_logic_vector(to_unsigned(data_len-1, 6));
     reg(23 downto 16) := reg_addr;
     reg(11 downto 5) := target_addr;
     reg(4) := op;
@@ -78,5 +80,25 @@ package body avmm_pkg is
     AvmmWrite(trans,x"00",reg,"1111");
 
   end procedure;
+
+  procedure readDataRegs(signal trans: inout AddressBusRecType; data: out DataRegArrayT) is
+    variable data_reg : std_logic_vector(31 downto 0) := (others =>'0');
+  begin
+    for i in data'range loop
+      AvmmRead(trans,std_logic_vector(to_unsigned(i+16,6)),"1111",data_reg);
+      data(0) := data_reg;
+    end loop;
+  end procedure;
+
+  function DataRegArr_to_slv(datareg: DataRegArrayT) return std_logic_vector is
+    variable slv : std_logic_vector(64*8-1 downto 0);
+  begin
+    for i in datareg'range loop
+      slv((i+1)*32-1 downto i*32) := datareg(i);
+    end loop;
+
+    return slv;
+  end function;
+
 
 end package body;

@@ -37,10 +37,13 @@ architecture rtl of i2c_vu is
     value    : std_logic;
   end record;
 
-  procedure I2CWaitForStart(signal pins : in I2cPinoutT) is
+  procedure I2CWaitForStart(signal pins : in I2cPinoutT;variable error : out boolean) is
   begin
-    AffirmIfEqual(pins.scl, 'Z', "I2C Specification violated. (Wrong pin state before START)"); -- TODO: enter correct pin state in assertion
-    AffirmIfEqual(pins.sda, 'Z', "I2C Specification violated. (Wrong pin state before START)"); -- TODO: enter correct pin state in assertion
+    if not(pins.scl = 'Z' and pins.sda = 'Z') then
+      Alert("I2C Specification violated. (Wrong pin state before START)");
+      error := true;
+      return;
+    end if;
     wait until pins.sda = '0';
   end procedure;
 
@@ -94,7 +97,7 @@ architecture rtl of i2c_vu is
       Alert("I2CWriteBit: Oops, the SCLs value is wrong :o. Expected: 0, Actual: " & to_string(pins.scl));
       wait until pins.scl = '0';
     end if;
-    pins.sda <= value;
+    pins.sda <= 'Z' when value = '1' else '0';
     wait until pins.scl = 'Z';
     wait until pins.scl = '0';
     pins.sda <= 'Z';
@@ -111,15 +114,19 @@ architecture rtl of i2c_vu is
       signal   pins_io  : inout I2cPinoutT;
       variable dev_addr : out   std_logic_vector(6 downto 0);
       variable reg_addr : out   std_logic_vector(7 downto 0);
-      variable data     : out   std_logic_vector(64 * 8 - 1 downto 0)
+      variable data     : out   std_logic_vector(64 * 8 - 1 downto 0);
+      variable data_length : in integer
     ) is
     variable b    : I2cValueRec;
-    variable d    : data_t;
+    variable d    : data_t := (others => (others => '0'));
     variable byte : std_logic_vector(7 downto 0);
     variable err  : boolean;
   begin
     Log("*** Waiting for I2C start ***");
-    I2CWaitForStart(pins_io);
+    I2CWaitForStart(pins_io,err);
+    if err then
+      return;
+    end if;
 
     -- Read slave address and 0
     I2CReadInto(pins_io, dev_addr, err);
@@ -135,38 +142,48 @@ architecture rtl of i2c_vu is
 
     -- Read register address
     I2CReadInto(pins_io, reg_addr, err);
-    Log("now1" & boolean'image(err));
     if err then
       return;
     end if;
     I2CWriteAck(pins_io);
-    Log("now2");
 
     -- Read data
-    for i in d'range loop
+    for i in 0 to data_length-1 loop
       I2CReadInto(pins_io, byte, err);
-      Log("now3" & boolean'image(err));
       if err then
+        Alert("expected data Bit but returned (" & to_string(b.bit_type) & ", " & to_string(b.value) & ").");
         return;
       end if;
       d(i) := byte;
       I2CWriteAck(pins_io);
       data := flatten(d);
     end loop;
+
+    --check stop condition
+    I2CReadBit(pins_io, b);
+    if b.bit_type /= I2C_STOP then
+      Alert("I2CRead: Expected stop but returned (" & to_string(b.bit_type) & ", " & to_string(b.value) & ").");
+      return;
+    end if;
   end procedure;
 
   procedure perform_write(
-      signal   pins     : inout I2cPinoutT;
+      signal   pins_io     : inout I2cPinoutT;
       variable dev_addr : out   std_logic_vector(6 downto 0);
       variable reg_addr : out   std_logic_vector(7 downto 0);
-      variable data     : out   std_logic_vector(64 * 8 - 1 downto 0)
+      variable data     : in   std_logic_vector(64 * 8 - 1 downto 0);
+      variable data_length : in integer
     ) is
     variable b    : I2cValueRec;
     variable d    : data_t;
     variable byte : std_logic_vector(7 downto 0);
     variable err  : boolean;
   begin
-    I2CWaitForStart(pins);
+    I2CWaitForStart(pins_io,err);
+    if err then
+      return;
+    end if;
+
     -- Read slave address and 0
     I2CReadInto(pins_io, dev_addr, err);
     if err then
@@ -180,12 +197,11 @@ architecture rtl of i2c_vu is
     I2CWriteAck(pins_io);
     -- Read register address
     I2CReadInto(pins_io, reg_addr, err);
-    Log("now1" & boolean'image(err));
     if err then
       return;
     end if;
     I2CWriteAck(pins_io);
-    Log("now2");
+
     -- Read START
     I2CReadBit(pins_io, b);
     if b.bit_type /= I2C_START then
@@ -204,25 +220,29 @@ architecture rtl of i2c_vu is
     end if;
     I2CWriteAck(pins_io);
     -- Write data bytes
-    for i in 63 downto 0 loop
+
+    for i in 0 to data_length-1 loop
       I2CWriteFrom(pins_io, data(8*(i+1)-1 downto 8*i));
       I2CReadBit(pins_io, b);
       if b.bit_type /= I2C_VALUE then
         Alert("I2CWrite: Expected I2C_VALUE, recieved " & to_string(b.bit_type));
         return;
-      elsif b.value = 'Z' then -- NACK
-        I2CReadBit(pins_io, b);
-        if b.bit_type /= I2C_STOP then
-          Alert("I2CWrite: Did not recieve I2C_STOP at end of transaction.");
-        end if;
-        return;
+      elsif b.value = '1' then -- NACK
+        exit;
       end if;
     end loop;
-    Alert("I2CWrite: More that 64 data bytes.");
+
+    --check stop condition
+    I2CReadBit(pins_io, b);
+    if b.bit_type /= I2C_STOP then
+      Alert("I2CRead: Expected stop but returned (" & to_string(b.bit_type) & ", " & to_string(b.value) & ").");
+      return;
+    end if;
   end procedure;
 
 begin
 
+/*
   timing_p: process (pins_io.scl, pins_io.sda) is
     constant LOW_TIME             : time := 1.3 us;
     constant HIGH_TIME            : time := 0.6 us;
@@ -285,11 +305,12 @@ begin
       end if;
     end if;
   end process;
-
+*/
   sequencer_p: process is
     variable dev_addr : std_logic_vector(6 downto 0);
     variable reg_addr : std_logic_vector(7 downto 0);
     variable data     : std_logic_vector(64 * 8 - 1 downto 0) := (others => '0');
+    variable data_length : integer;
   begin
     pins_io.scl <= 'Z';
     pins_io.sda <= 'Z';
@@ -298,14 +319,17 @@ begin
       WaitForTransaction(clk => clk_i, Rdy => trans_io.Rdy, Ack => trans_io.Ack);
       case trans_io.Operation is
         when WRITE_OP =>
-          --perform_write(dev_addr, reg_addr, pins_io, data);
-          trans_io.DataFromModel <= std_logic_vector_max_c(data);
+          data_length := trans_io.IntToModel;
+          data := std_logic_vector(trans_io.DataToModel);
+          perform_write(pins_io, dev_addr, reg_addr, data,data_length);
+          
           -- WRITE_OP END 
         when READ_OP =>
           Log("*** Start of I2C Read Transaction ***");
-          perform_read(pins_io, dev_addr, reg_addr, data);
+          data_length := trans_io.IntToModel;
+          perform_read(pins_io, dev_addr, reg_addr, data, data_length);
           trans_io.DataFromModel <= SafeResize(data, trans_io.DataFromModel'length);
-          trans_io.Address <= SafeResize(dev_addr & reg_addr, trans_io.Address'length);
+          trans_io.Address <= ToTransaction(dev_addr & reg_addr);
           Log("*** End of I2C Read Transaction ***");
           -- READ_OP END
         when others =>
