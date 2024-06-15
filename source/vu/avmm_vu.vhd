@@ -18,6 +18,9 @@ entity avmm_vu is
 end entity;
 
 architecture rtl of avmm_vu is
+
+  signal lastclk : time;
+
 begin
   sequencer_p: process is
   begin
@@ -61,4 +64,15 @@ begin
       end case;
     end loop;
   end process;
+
+  lastclk <= now when rising_edge(clk_i) else lastclk;
+
+  check_sync : process is
+  begin
+    loop
+      wait on pins_io.readdata;
+      AffirmIfEqual(now,lastclk,"readdate changed not synchronous to clock");
+    end loop;
+  end process;
+
 end architecture;
