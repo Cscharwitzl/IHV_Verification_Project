@@ -19,7 +19,7 @@ end entity;
 
 architecture rtl of avmm_vu is
 
-  signal lastclk : time;
+  signal lastclk : time := 0 ps;
 
 begin
   sequencer_p: process is
