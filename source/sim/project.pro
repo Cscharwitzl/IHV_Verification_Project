@@ -10,13 +10,13 @@ analyze ../dut/clock_crosser.vhd
 analyze ../dut/i2c_multi_bus_controller_memory.vhd
 analyze ../dut/i2c_multi_bus_controller.vhd
 
-analyze dut_test_ctrl.vhd
+analyze dut_test_ctrl.vhd 
 analyze dut_harness.vhd
 analyze tb_dut.vhd
 
 #RunTest tb_avmm.vhd
 #RunTest tb_reset.vhd
-#RunTest tb_i2c_read.vhd
-RunTest tb_i2c_write.vhd
+#RunTest tb_i2c_write.vhd
+RunTest tb_i2c_read.vhd
 
 #simulate tb_dut

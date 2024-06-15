@@ -120,7 +120,7 @@ architecture rtl of i2c_vu is
     if err then
       return;
     end if;
-    Log("*** I2C Read started ***");
+
     -- Read slave address and 0
     I2CReadInto(pins_io, dev_addr, err);
     if err then
@@ -131,13 +131,27 @@ architecture rtl of i2c_vu is
       Alert("I2CRead: Expected 0 but returned (" & to_string(b.bit_type) & ", " & to_string(b.value) & ").");
       return;
     end if;
+
+    --Write Ack
     I2CWriteBit(pins_io, addr_ack);
+    if addr_ack = '1' then
+      wait until pins_io.scl = 'Z';
+      return;
+    end if;
+
     -- Read register address
     I2CReadInto(pins_io, reg_addr, err);
     if err then
       return;
     end if;
+    
+    --Write Ack
     I2CWriteBit(pins_io, reg_ack);
+    if reg_ack = '1' then
+      wait until pins_io.scl = 'Z';
+      return;
+    end if;
+
     -- Read data
     for i in 0 to data_length - 1 loop
       I2CReadInto(pins_io, byte, err);
@@ -145,7 +159,14 @@ architecture rtl of i2c_vu is
         Alert("expected data Bit but returned (" & to_string(b.bit_type) & ", " & to_string(b.value) & ").");
         return;
       end if;
+
+      --Write Ack
       I2CWriteBit(pins_io, data_acks(i));
+      if data_acks(i) = '1' then
+        wait until pins_io.scl = 'Z';
+        return;
+      end if;
+
       d(i) := byte;
     end loop;
     data := flatten(d);
@@ -187,13 +208,26 @@ architecture rtl of i2c_vu is
       Alert("I2CRead: Expected 0 but returned (" & to_string(b.bit_type) & ", " & to_string(b.value) & ").");
       return;
     end if;
+
+    --Write Ack
     I2CWriteBit(pins_io, addr_ack);
+    if addr_ack = '1' then
+      wait until pins_io.scl = 'Z';
+      return;
+    end if;
+    
     -- Read register address
     I2CReadInto(pins_io, reg_addr, err);
     if err then
       return;
     end if;
+
+    --Write Ack
     I2CWriteBit(pins_io, reg_ack);
+    if reg_ack = '1' then
+      wait until pins_io.scl = 'Z';
+      return;
+    end if;
 
     -- Read START
     I2CReadBit(pins_io, b);
@@ -211,7 +245,14 @@ architecture rtl of i2c_vu is
       Alert("I2CRead: Expected 1 but returned (" & to_string(b.bit_type) & ", " & to_string(b.value) & ").");
       return;
     end if;
+
+    --Write Ack
     I2CWriteBit(pins_io, sec_addr_ack);
+    if reg_ack = '1' then
+      wait until pins_io.scl = 'Z';
+      return;
+    end if;
+
     -- Write data bytes
     for i in 0 to data_length - 1 loop
       I2CWriteFrom(pins_io, data(8 * (i + 1) - 1 downto 8 * i));
@@ -326,6 +367,8 @@ begin
     variable byte                            : std_logic_vector(7 downto 0);
     variable d                               : data_t;
     variable err                             : boolean;
+
+    variable tmp: std_logic_vector(3 + 64 * (8+1) - 1 downto 0);
   begin
     pins_io.scl <= 'Z';
     pins_io.sda <= 'Z';
@@ -342,16 +385,17 @@ begin
           (addr_ack, reg_ack, sec_addr_ack, data_acks, data) := std_logic_vector(trans_io.DataToModel);
           perform_write(pins_io, dev_addr, reg_addr, data, data_length, addr_ack, reg_ack, sec_addr_ack);
           trans_io.DataFromModel <= SafeResize(dev_addr & reg_addr & data, trans_io.DataFromModel'length);
-
           -- WRITE_OP END 
+
         when READ_OP =>
-          Log("*** Start of I2C Read Transaction ***");
           data_length := trans_io.IntToModel;
+          --(data, data_acks, sec_addr_ack, reg_ack, addr_ack) := std_logic_vector(trans_io.DataToModel);
           (addr_ack, reg_ack, sec_addr_ack, data_acks, data) := std_logic_vector(trans_io.DataToModel);
+          tmp := std_logic_vector(trans_io.DataToModel);
           perform_read(pins_io, dev_addr, reg_addr, data, data_length, addr_ack, reg_ack, data_acks);
           trans_io.DataFromModel <= SafeResize(dev_addr & reg_addr & data, trans_io.DataFromModel'length);
-          Log("*** End of I2C Read Transaction ***");
           -- READ_OP END
+
         when others =>
           Alert("Unimplemented Transaction", FAILURE);
       end case;

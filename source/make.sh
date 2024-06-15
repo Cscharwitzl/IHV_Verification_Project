@@ -32,6 +32,7 @@ elif [[ "$1" == "clean" ]]; then
   rm -f *.wlf
   rm -f *.vstf
   rm -f modelsim.ini
+  rm -f wlf*
 
 else
   Usage
