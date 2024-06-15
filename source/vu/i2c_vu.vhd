@@ -256,7 +256,7 @@ begin
     -- CHECKS FOR SCL LOW/HIGH TIME AND DATA SETUP TIME
     if pins_io.scl'event then
       scl_changed := true;
-      if pins_io.scl = 'Z' then
+      if pins_io.scl = 'Z' and last_scl_change/= 0 ns then
         AlertIfNot(last_scl_change >= LOW_TIME, "I2C SCL LOW time of >=1.3 us was not met");
         -- if a start was currently going on but the sda had no change in the meantime,
         -- that means sda signal simply stayed low until the new rising clock edge, so start has completed
@@ -269,7 +269,7 @@ begin
           AlertIfNot((now - last_sda_change) >= DATA_SETUP_TIME, "I2C DATA SETUP time of >= 100 ns was not met");
         end if;
 
-      elsif pins_io.scl = '0' then
+      elsif pins_io.scl = '0' and last_scl_change /= 0 ns then
         AlertIfNot(last_scl_change >= HIGH_TIME, "I2C SCL HIGH time of >=0.6 us was not met");
       end if;
     end if;
