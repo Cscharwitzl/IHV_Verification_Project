@@ -98,46 +98,48 @@ begin
   end process;
 
   read_p: process is
-    variable data_read : std_logic_vector(64 * 8 - 1 downto 0) := (others => '0');
-    variable addr      : std_logic_vector(14 downto 0)         := (others => '0');
+    variable data_read : std_logic_vector(7 + 8 + 64 * 8 - 1 downto 0) := (others => '0');
+    variable dev_addr      : std_logic_vector(6 downto 0);
+    variable reg_addr      : std_logic_vector(7 downto 0);
+    variable data          : std_logic_vector(64*8-1 downto 0);
   begin
     WaitForBarrier(test_start);
 
     Log("*** Start of Tests (I2C) ***");
 
     -- read 1 byte
-    I2CRead(i2c_trans_io(3), x"55", data_read, 1);
-    addr := std_logic_vector(i2c_trans_io(3).Address);
-    Check(SB, data_read);
-    Check(SB, addr(14 downto 8));
-    Check(SB, addr(7 downto 0));
+    I2CRead(i2c_trans_io(3), data_read, 1);
+    (dev_addr,reg_addr,data) := data_read;
+    Check(SB, data);
+    Check(SB, dev_addr);
+    Check(SB, reg_addr);
     WaitForBarrier(test_done);
     test_done <= 1;
 
     --read 4 byte
-    I2CRead(i2c_trans_io(3), x"00", data_read, 4);
-    addr := std_logic_vector(i2c_trans_io(3).Address);
-    Check(SB, data_read);
-    Check(SB, addr(14 downto 8));
-    Check(SB, addr(7 downto 0));
+    I2CRead(i2c_trans_io(3), data_read, 4);
+    (dev_addr,reg_addr,data) := data_read;
+    Check(SB, data);
+    Check(SB, dev_addr);
+    Check(SB, reg_addr);
     WaitForBarrier(test_done);
     test_done <= 1;
 
     --read wrong length slave
-    I2CRead(i2c_trans_io(3), x"00", data_read, 4);
-    addr := std_logic_vector(i2c_trans_io(3).Address);
-    Check(SB, data_read);
-    Check(SB, addr(14 downto 8));
-    Check(SB, addr(7 downto 0));
+    I2CRead(i2c_trans_io(3), data_read, 4);
+    (dev_addr,reg_addr,data) := data_read;
+    Check(SB, data);
+    Check(SB, dev_addr);
+    Check(SB, reg_addr);
     WaitForBarrier(test_done);
     test_done <= 1;
 
     --read wrong length master
-    I2CRead(i2c_trans_io(3), x"00", data_read, 5);
-    addr := std_logic_vector(i2c_trans_io(3).Address);
-    Check(SB, data_read);
-    Check(SB, addr(14 downto 8));
-    Check(SB, addr(7 downto 0));
+    I2CRead(i2c_trans_io(3), data_read, 5);
+    (dev_addr,reg_addr,data) := data_read;
+    Check(SB, data);
+    Check(SB, dev_addr);
+    Check(SB, reg_addr);
     WaitForBarrier(test_done);
     test_done <= 1;
 
