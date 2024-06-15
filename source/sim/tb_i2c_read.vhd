@@ -9,27 +9,6 @@ architecture tb_i2c_read_arc of dut_test_ctrl is
   signal test_start : integer_barrier;
   signal test_done  : integer_barrier;
 
-  function SetupControlReg(
-      go       : boolean;
-      len      : integer;
-      reg_addr : std_logic_vector(7 downto 0);
-      addr     : std_logic_vector(6 downto 0);
-      read     : boolean;
-      intr_en  : boolean;
-      rst      : boolean)
-    return std_logic_vector is
-    variable reg : std_logic_vector(31 downto 0) := (others => '0');
-  begin
-    reg(31) := '1' when go else '0';
-    reg(29 downto 24) := std_logic_vector(to_unsigned(len, 6));
-    reg(23 downto 16) := reg_addr;
-    reg(11 downto 5) := addr;
-    reg(4) := '1' when read else '0';
-    reg(1) := '1' when intr_en else '0';
-    reg(0) := '1' when rst else '0';
-    return reg;
-  end function;
-
   signal SB : ScoreBoardIDType;
 
 begin
@@ -114,7 +93,6 @@ begin
     Check(SB, dev_addr);
     Check(SB, reg_addr);
     WaitForBarrier(test_done);
-    test_done <= 1;
 
     --read 4 byte
     I2CRead(i2c_trans_io(3), data_read, 4);
@@ -123,7 +101,6 @@ begin
     Check(SB, dev_addr);
     Check(SB, reg_addr);
     WaitForBarrier(test_done);
-    test_done <= 1;
 
     --read wrong length slave
     I2CRead(i2c_trans_io(3), data_read, 4);
@@ -132,7 +109,6 @@ begin
     Check(SB, dev_addr);
     Check(SB, reg_addr);
     WaitForBarrier(test_done);
-    test_done <= 1;
 
     --read wrong length master
     I2CRead(i2c_trans_io(3), data_read, 5);
@@ -141,7 +117,6 @@ begin
     Check(SB, dev_addr);
     Check(SB, reg_addr);
     WaitForBarrier(test_done);
-    test_done <= 1;
 
     Log("*** End of Tests (I2C) ***");
 

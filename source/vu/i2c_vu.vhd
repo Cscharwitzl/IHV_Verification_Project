@@ -256,7 +256,7 @@ begin
     -- CHECKS FOR SCL LOW/HIGH TIME AND DATA SETUP TIME
     if pins_io.scl'event then
       scl_changed := true;
-      if pins_io.scl = '1' then
+      if pins_io.scl = 'Z' then
         AlertIfNot(last_scl_change >= LOW_TIME, "I2C SCL LOW time of >=1.3 us was not met");
         -- if a start was currently going on but the sda had no change in the meantime,
         -- that means sda signal simply stayed low until the new rising clock edge, so start has completed
@@ -277,11 +277,11 @@ begin
     -- CHECKS FOR START/STOP CONDITIONS
     if pins_io.sda'event then
       sda_changed := true;
-      if pins_io.sda'last_value = '0' or pins_io.sda'last_value = '1' then
+      if pins_io.sda'last_value = '0' or pins_io.sda'last_value = 'Z' then
         -- ignore other kinds of changes for now
-        if pins_io.scl = '1' then
+        if pins_io.scl = 'Z' then
           -- there is currently either a start or stop happening
-          if pins_io.sda = '1' then
+          if pins_io.sda = 'Z' then
             -- encountered stop condition, check when the clock change was to see if setup time was met
             AlertIfNot((now - last_scl_change) >= STOP_SETUP_TIME, "I2C STOP SETUP time of >= 0.6 us was not met");
             stop_cond_time := now;
@@ -341,7 +341,7 @@ begin
           data_length := trans_io.IntToModel;
           (addr_ack, reg_ack, sec_addr_ack, data_acks, data) := std_logic_vector(trans_io.DataToModel);
           perform_write(pins_io, dev_addr, reg_addr, data, data_length, addr_ack, reg_ack, sec_addr_ack);
-          trans_io.DataFromModel <= SafeResize(dev_addr & reg_addr, trans_io.DataFromModel'length);
+          trans_io.DataFromModel <= SafeResize(dev_addr & reg_addr & data, trans_io.DataFromModel'length);
 
           -- WRITE_OP END 
         when READ_OP =>
