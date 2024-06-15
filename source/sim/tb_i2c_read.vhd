@@ -106,7 +106,7 @@ begin
     Log("*** Start of Tests (I2C) ***");
 
     -- read 1 byte
-    I2CRead(i2c_trans_io(3), x"00", data_read, 1);
+    I2CRead(i2c_trans_io(3), x"55", data_read, 1);
     addr := std_logic_vector(i2c_trans_io(3).Address);
     Check(SB, data_read);
     Check(SB, addr(14 downto 8));

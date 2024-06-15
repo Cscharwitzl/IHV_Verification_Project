@@ -321,16 +321,16 @@ begin
   end process;
 
   sequencer_p: process is
-    variable dev_addr          : std_logic_vector(6 downto 0);
-    variable reg_addr          : std_logic_vector(7 downto 0);
-    variable addr_ack, reg_ack : std_logic;
-    variable data_acks         : I2cDataACKsT;
-    variable data              : std_logic_vector(64 * 8 - 1 downto 0) := (others => '0');
-    variable data_length       : integer;
-    variable b                 : I2cValueRec;
-    variable byte              : std_logic_vector(7 downto 0);
-    variable d                 : data_t;
-    variable err               : boolean;
+    variable dev_addr                        : std_logic_vector(6 downto 0);
+    variable reg_addr                        : std_logic_vector(7 downto 0);
+    variable addr_ack, reg_ack, sec_addr_ack : std_logic;
+    variable data_acks                       : I2cDataACKsT;
+    variable data                            : std_logic_vector(64 * 8 - 1 downto 0) := (others => '0');
+    variable data_length                     : integer;
+    variable b                               : I2cValueRec;
+    variable byte                            : std_logic_vector(7 downto 0);
+    variable d                               : data_t;
+    variable err                             : boolean;
   begin
     pins_io.scl <= 'Z';
     pins_io.sda <= 'Z';
@@ -344,21 +344,16 @@ begin
       case trans_io.Operation is
         when WRITE_OP =>
           data_length := trans_io.IntToModel;
-          data := std_logic_vector(trans_io.DataToModel);
+          (addr_ack, reg_ack, sec_addr_ack, data_acks, data) := std_logic_vector(trans_io.DataToModel);
           perform_write(pins_io, dev_addr, reg_addr, data, data_length);
 
           -- WRITE_OP END 
         when READ_OP =>
           Log("*** Start of I2C Read Transaction ***");
           data_length := trans_io.IntToModel;
-          (addr_ack, reg_ack, data_acks, data) := std_logic_vector(trans_io.DataToModel);
-          Log(to_string(data_length));
-          Log(to_string(addr_ack));
-          Log(to_string(reg_ack));
-          Log(to_string(data_acks));
+          (addr_ack, reg_ack, sec_addr_ack, data_acks, data) := std_logic_vector(trans_io.DataToModel);
           perform_read(pins_io, dev_addr, reg_addr, data, data_length, addr_ack, reg_ack, data_acks);
-          trans_io.DataFromModel <= SafeResize(data, trans_io.DataFromModel'length);
-          trans_io.Address <= SafeResize(dev_addr & reg_addr, trans_io.Address'length);
+          trans_io.DataFromModel <= SafeResize(dev_addr & reg_addr & data, trans_io.DataFromModel'length);
           Log("*** End of I2C Read Transaction ***");
           -- READ_OP END
         when others =>
