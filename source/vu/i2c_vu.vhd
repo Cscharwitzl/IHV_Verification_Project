@@ -47,14 +47,6 @@ architecture rtl of i2c_vu is
     wait until pins.sda = '0';
   end procedure;
 
-  procedure I2CWriteAck(signal pins : inout I2cPinoutT) is
-  begin
-    pins.sda <= '0';
-    wait until pins.scl = 'Z';
-    wait until pins.scl = '0';
-    pins.sda <= 'Z';
-  end procedure;
-
   procedure I2CReadBit(signal pins : in I2cPinoutT; variable value : out I2cValueRec) is
     variable sda_at_start : std_logic;
   begin
@@ -170,7 +162,10 @@ architecture rtl of i2c_vu is
       variable dev_addr    : out   std_logic_vector(6 downto 0);
       variable reg_addr    : out   std_logic_vector(7 downto 0);
       variable data        : in    std_logic_vector(64 * 8 - 1 downto 0);
-      variable data_length : in    integer
+      variable data_length : in    integer;
+      variable addr_ack : in    std_logic;
+      variable reg_ack : in    std_logic;
+      variable sec_addr_ack : in    std_logic
     ) is
     variable b    : I2cValueRec;
     variable d    : data_t;
@@ -192,13 +187,13 @@ architecture rtl of i2c_vu is
       Alert("I2CRead: Expected 0 but returned (" & to_string(b.bit_type) & ", " & to_string(b.value) & ").");
       return;
     end if;
-    I2CWriteAck(pins_io);
+    I2CWriteBit(pins_io, addr_ack);
     -- Read register address
     I2CReadInto(pins_io, reg_addr, err);
     if err then
       return;
     end if;
-    I2CWriteAck(pins_io);
+    I2CWriteBit(pins_io, reg_ack);
 
     -- Read START
     I2CReadBit(pins_io, b);
@@ -216,7 +211,7 @@ architecture rtl of i2c_vu is
       Alert("I2CRead: Expected 1 but returned (" & to_string(b.bit_type) & ", " & to_string(b.value) & ").");
       return;
     end if;
-    I2CWriteAck(pins_io);
+    I2CWriteBit(pins_io, sec_addr_ack);
     -- Write data bytes
     for i in 0 to data_length - 1 loop
       I2CWriteFrom(pins_io, data(8 * (i + 1) - 1 downto 8 * i));
@@ -345,7 +340,8 @@ begin
         when WRITE_OP =>
           data_length := trans_io.IntToModel;
           (addr_ack, reg_ack, sec_addr_ack, data_acks, data) := std_logic_vector(trans_io.DataToModel);
-          perform_write(pins_io, dev_addr, reg_addr, data, data_length);
+          perform_write(pins_io, dev_addr, reg_addr, data, data_length, addr_ack, reg_ack, sec_addr_ack);
+          trans_io.DataFromModel <= SafeResize(dev_addr & reg_addr, trans_io.DataFromModel'length);
 
           -- WRITE_OP END 
         when READ_OP =>

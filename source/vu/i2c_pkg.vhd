@@ -25,18 +25,25 @@ package i2c_pkg is
   type I2cPinoutTArray is array (natural range <>) of I2cPinoutT;
   type AddressBusRecTypeArray is array (natural range <>) of I2cAddressBusRecT;
 
-  procedure I2CWrite(signal trans : inout I2cAddressBusRecT; address, data : std_logic_vector; data_length : integer);
-  procedure I2CRead(signal trans : inout I2cAddressBusRecT; variable read_data : out std_logic_vector; data_length : integer);
+  procedure I2CWrite(signal trans : inout I2cAddressBusRecT; data : std_logic_vector; data_length : integer; addr_ack, reg_ack, sec_addr_ack : in std_logic);
+  procedure I2CWrite(signal trans : inout I2cAddressBusRecT; data : std_logic_vector; data_length : integer);
   procedure I2CRead(signal trans : inout I2cAddressBusRecT; variable read_data : out std_logic_vector; data_length : integer; addr_ack, reg_ack : in std_logic; data_acks : in I2cDataACKsT);
+  procedure I2CRead(signal trans : inout I2cAddressBusRecT; variable read_data : out std_logic_vector; data_length : integer);
 
 end package;
 
 package body i2c_pkg is
 
-  procedure I2CWrite(signal trans : inout I2cAddressBusRecT; address, data : std_logic_vector; data_length : integer) is
+  procedure I2CWrite(signal trans : inout I2cAddressBusRecT; data : std_logic_vector; data_length : integer; addr_ack, reg_ack, sec_addr_ack : in std_logic) is
   begin
     trans.IntToModel <= data_length;
-    Write(trans, address, data);
+    trans.DataToModel <= SafeResize(addr_ack & reg_ack & sec_addr_ack & (I2cDataACKsT'range => '0') & data, trans.DataToModel'length);
+    Write(trans, "", data);
+  end procedure;
+
+  procedure I2CWrite(signal trans : inout I2cAddressBusRecT; data : std_logic_vector; data_length : integer) is
+  begin
+    I2CWrite(trans, data, data_length, '0', '0', '0');
   end procedure;
 
   procedure I2CRead(signal trans : inout I2cAddressBusRecT; variable read_data : out std_logic_vector; data_length : integer; addr_ack, reg_ack : in std_logic; data_acks : in I2cDataACKsT) is
