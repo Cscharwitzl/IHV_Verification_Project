@@ -242,8 +242,8 @@ architecture rtl of i2c_vu is
 
 begin
 
-/*
-  timing_p: process (pins_io.scl, pins_io.sda) is
+
+  timing_p: process is
     constant LOW_TIME             : time := 1.3 us;
     constant HIGH_TIME            : time := 0.6 us;
     constant START_HOLD_TIME      : time := 0.6 us;
@@ -255,11 +255,17 @@ begin
     variable start_cond_time : time    := 0 us;
     variable stop_cond_time  : time    := 0 us;
     variable data_change_met : boolean := false;
+    variable last_scl_change : time    := 0 us;
+    variable scl_changed     : boolean := false;
+    variable last_sda_change : time    := 0 us;
+    variable sda_changed     : boolean := false;
   begin
+    wait until (pins_io.scl'event or pins_io.sda'event);
     -- CHECKS FOR SCL LOW/HIGH TIME AND DATA SETUP TIME
     if pins_io.scl'event then
+      scl_changed := true;
       if pins_io.scl = '1' then
-        AlertIfNot(pins_io.scl'last_event >= LOW_TIME, "I2C SCL LOW time of >=1.3 us was not met");
+        AlertIfNot(last_scl_change >= LOW_TIME, "I2C SCL LOW time of >=1.3 us was not met");
         -- if a start was currently going on but the sda had no change in the meantime,
         -- that means sda signal simply stayed low until the new rising clock edge, so start has completed
         if start_cond_met then
@@ -268,29 +274,30 @@ begin
 
         if data_change_met then
           data_change_met := false;
-          AlertIfNot((now - pins_io.sda'last_event) >= DATA_SETUP_TIME, "I2C DATA SETUP time of >= 100 ns was not met");
+          AlertIfNot((now - last_sda_change) >= DATA_SETUP_TIME, "I2C DATA SETUP time of >= 100 ns was not met");
         end if;
 
       elsif pins_io.scl = '0' then
-        AlertIfNot(pins_io.scl'last_event >= HIGH_TIME, "I2C SCL HIGH time of >=0.6 us was not met");
+        AlertIfNot(last_scl_change >= HIGH_TIME, "I2C SCL HIGH time of >=0.6 us was not met");
       end if;
     end if;
 
     -- CHECKS FOR START/STOP CONDITIONS
     if pins_io.sda'event then
+      sda_changed := true;
       if pins_io.sda'last_value = '0' or pins_io.sda'last_value = '1' then
         -- ignore other kinds of changes for now
         if pins_io.scl = '1' then
           -- there is currently either a start or stop happening
           if pins_io.sda = '1' then
             -- encountered stop condition, check when the clock change was to see if setup time was met
-            AlertIfNot((now - pins_io.scl'last_event) >= STOP_SETUP_TIME, "I2C STOP SETUP time of >= 0.6 us was not met");
+            AlertIfNot((now - last_scl_change) >= STOP_SETUP_TIME, "I2C STOP SETUP time of >= 0.6 us was not met");
             stop_cond_time := now;
           elsif pins_io.sda = '0' then
             -- encountered start condition
             start_cond_met := true;
             start_cond_time := now;
-            AlertIfNot((now - pins_io.scl'last_event) >= START_SETUP_TIME, "I2C START SETUP time of >= 0.6 us was not met");
+            AlertIfNot((now - last_scl_change) >= START_SETUP_TIME, "I2C START SETUP time of >= 0.6 us was not met");
             -- check if the previous stop signal was more than STOP_START_IDLE_TIME
             AlertIfNot((now - stop_cond_time) >= STOP_START_IDLE_TIME, "I2C Idle time between STOP and following START of >= 1.3 us was not met");
           end if;
@@ -304,8 +311,18 @@ begin
         end if;
       end if;
     end if;
+
+    if scl_changed then
+      last_scl_change := now;
+      scl_changed := false;
+    end if;
+
+    if sda_changed then
+      last_sda_change := now;
+      sda_changed := false;
+    end if;
   end process;
-*/
+
   sequencer_p: process is
     variable dev_addr : std_logic_vector(6 downto 0);
     variable reg_addr : std_logic_vector(7 downto 0);
