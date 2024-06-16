@@ -15,18 +15,21 @@ begin
   CreateReset(rst_o, '1', clk_o, 100 ns, 0 ns);
 
   stimuli_p: process is
-    variable datareg : DataRegArrayT(15 downto 0) := (others => (others => '0'));
+    variable datareg : DataRegArrayT(15 downto 0)   := (others => (others => '0'));
+    variable bus_en  : std_logic_vector(3 downto 0) := (others => '0');
   begin
     SB <= NewID(id);
     Log("*** Start of Testbench ***");
     wait until rst_o = '0';
     WaitForBarrier(tb_start);
 
-    for i in i2c_trans_io'range loop
+    for i in 0 to 3 loop
       --interrupt at transfer without error
       datareg(0)(7 downto 0) := x"55";
+      bus_en := (others => '0');
+      bus_en(i) := '1';
       WaitForBarrier(test_start);
-      startI2CTransfereInAVMM(avmm_trans_io, '0', i, x"AA", "1111111", 1, datareg);
+      startI2CTransfereInAVMM(avmm_trans_io, '0', bus_en, x"AA", "1111111", 1, datareg);
       WaitForBarrier(test_end);
       waitForFlags(avmm_trans_io, x"00", x"80000000", '0', CLK_DIVIDE_G);
       AffirmIfEqual(irq_i, '1', "Interrupt output is not set");
@@ -40,7 +43,7 @@ begin
       --interrupt at transfer with error
       datareg(0)(7 downto 0) := x"55";
       WaitForBarrier(test_start);
-      startI2CTransfereInAVMM(avmm_trans_io, '0', i, x"AA", "1111111", 1, datareg);
+      startI2CTransfereInAVMM(avmm_trans_io, '0', bus_en, x"AA", "1111111", 1, datareg);
       WaitForBarrier(test_end);
       waitForFlags(avmm_trans_io, x"00", x"80000000", '0', CLK_DIVIDE_G);
       AffirmIfEqual(irq_i, '1', "Interrupt output is not set");
@@ -62,19 +65,51 @@ begin
   begin
     WaitForBarrier(tb_start);
 
-    for i in i2c_trans_io'range loop
-      --interrupt at transfer without error
-      WaitForBarrier(test_start);
-      I2CRead(i2c_trans_io(i), data, 1);
-      WaitForBarrier(test_end);
+    --interrupt at transfer without error
+    WaitForBarrier(test_start);
+    I2CRead(i2c_trans_io(0), data, 1);
+    WaitForBarrier(test_end);
 
-      --interrupt at transfer with error
-      WaitForBarrier(test_start);
-      I2CRead(i2c_trans_io(i), data, 1, '1', '0',(others => '0'));
-      WaitForBarrier(test_end);
+    --interrupt at transfer with error
+    WaitForBarrier(test_start);
+    I2CRead(i2c_trans_io(0), data, 1, '1', '0',(others => '0'));
+    WaitForBarrier(test_end);
 
-      WaitForBarrier(tb_end);
-    end loop;
+
+    --interrupt at transfer without error
+    WaitForBarrier(test_start);
+    I2CRead(i2c_trans_io(1), data, 1);
+    WaitForBarrier(test_end);
+
+    --interrupt at transfer with error
+    WaitForBarrier(test_start);
+    I2CRead(i2c_trans_io(1), data, 1, '1', '0',(others => '0'));
+    WaitForBarrier(test_end);
+
+
+    --interrupt at transfer without error
+    WaitForBarrier(test_start);
+    I2CRead(i2c_trans_io(2), data, 1);
+    WaitForBarrier(test_end);
+
+    --interrupt at transfer with error
+    WaitForBarrier(test_start);
+    I2CRead(i2c_trans_io(2), data, 1, '1', '0',(others => '0'));
+    WaitForBarrier(test_end);
+
+
+    --interrupt at transfer without error
+    WaitForBarrier(test_start);
+    I2CRead(i2c_trans_io(3), data, 1);
+    WaitForBarrier(test_end);
+
+    --interrupt at transfer with error
+    WaitForBarrier(test_start);
+    I2CRead(i2c_trans_io(3), data, 1, '1', '0',(others => '0'));
+    WaitForBarrier(test_end);
+
+    WaitForBarrier(tb_end);
+
     wait;
   end process;
 
