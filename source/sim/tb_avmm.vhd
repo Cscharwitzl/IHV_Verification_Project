@@ -109,7 +109,7 @@ begin
     AffirmIfEqual(data_read,(test_data and bitmask) or (data_read and not bitmask),"Test failed for addr " & to_hstring(addr));
 
     --T-009 and T-010
-    test_data := x"55555555";
+    test_data := x"55555554";
     byte_en := "1111";
     addr := "000000";
     bitmask := "10111111111111110000111111110011";

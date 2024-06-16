@@ -20,7 +20,7 @@ begin
   stimuli_p: process is
     variable addr     : std_logic_vector(6 downto 0);
     variable byte_en  : std_logic_vector(3 downto 0);
-    variable datareg  : DataRegArrayT(15 downto 0)   := (others => (others => '0'));
+    variable datareg  : DataRegArrayT(0 to 15)   := (others => (others => '0'));
     variable dev_addr : std_logic_vector(6 downto 0);
     variable reg_addr : std_logic_vector(7 downto 0);
     variable flags    : std_logic_vector(1 downto 0) := (others => '0');
