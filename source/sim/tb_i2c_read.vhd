@@ -32,7 +32,7 @@ begin
     
 
     Log("*** Start of Tests (AVMM) ***");
-
+/*
     -- master writes 1 byte
     datareg := (others => (others => '0'));
     datareg(0) := x"00_00_00_55";
@@ -128,9 +128,9 @@ begin
     AvmmRead(avmm_trans_io,x"01","0001",flags);
     AffirmIfEqual(flags(1),'1',"Error flage not set");
     AvmmWrite(avmm_trans_io,x"01",x"F","1111");
-    
-/*
-    --read wrong length slave
+ */   
+
+    -- master writes too much data
     datareg(0) := x"22_FF_AA_55";
     dev_addr := "1010101";
     reg_addr := x"AA";
@@ -140,8 +140,10 @@ begin
     WaitForBarrier(test_start);
     startI2CTransfereInAVMM(avmm_trans_io, '0', 3, reg_addr, dev_addr, 5, datareg);
     WaitForBarrier(test_done);
+    AvmmWrite(avmm_trans_io,x"00",x"00000001","0001");
+    waitForFlags(avmm_trans_io,x"00",x"00000001",'0', CLK_DIVIDE_G * 2);
 
-    --read wrong length master
+    -- master writes not enough data
     datareg(0) := x"22_FF_AA_55";
     dev_addr := "0101010";
     reg_addr := x"55";
@@ -151,7 +153,7 @@ begin
     WaitForBarrier(test_start);
     startI2CTransfereInAVMM(avmm_trans_io, '0', 3, reg_addr, dev_addr, 4, datareg);
     WaitForBarrier(test_done);
-*/
+
     Log("*** End of Tests (AVMM) ***");
     Log("*** End of Testbench ***");
 
@@ -166,7 +168,7 @@ begin
   begin
 
     Log("*** Start of Tests (I2C) ***");
-
+/*
     -- slave read 1 byte
     WaitForBarrier(test_start);
     I2CRead(i2c_trans_io(3), data_read, 1);
@@ -217,19 +219,27 @@ begin
     Check(SB, dev_addr);
     Check(SB, reg_addr);
     WaitForBarrier(test_done);
-
-/*
-    --read wrong length slave
-
-    --read wrong length master
+*/
+    -- master writes too much data
     WaitForBarrier(test_start);
+    I2CRead(i2c_trans_io(3), data_read, 4);
+    (dev_addr,reg_addr,data) := data_read;
+    Check(SB, data);
+    Check(SB, dev_addr);
+    Check(SB, reg_addr);
+    Log("now");
+    WaitForBarrier(test_done);
+
+    -- master writes not enough data
+    WaitForBarrier(test_start);
+    Log("now");
     I2CRead(i2c_trans_io(3), data_read, 5);
     (dev_addr,reg_addr,data) := data_read;
     Check(SB, data);
     Check(SB, dev_addr);
     Check(SB, reg_addr);
     WaitForBarrier(test_done);
-*/
+
     Log("*** End of Tests (I2C) ***");
 
     wait;

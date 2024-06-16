@@ -74,7 +74,7 @@ architecture rtl of i2c_vu is
     for i in read_data'range loop
       I2CReadBit(pins, b);
       if b.bit_type /= I2C_VALUE then
-        Log("I2CReadNBits: Recieved " & to_string(b.bit_type) & ".");
+        Log("I2CReadInto: Recieved " & to_string(b.bit_type) & ".");
         error := true;
         return;
       end if;
@@ -154,7 +154,6 @@ architecture rtl of i2c_vu is
     for i in 0 to data_length - 1 loop
       I2CReadInto(pins_io, byte, err);
       if err then
-        Alert("expected data Bit but returned (" & to_string(b.bit_type) & ", " & to_string(b.value) & ").");
         return;
       end if;
       d(i) := byte;
