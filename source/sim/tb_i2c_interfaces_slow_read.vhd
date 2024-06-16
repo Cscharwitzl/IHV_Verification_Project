@@ -11,7 +11,7 @@ architecture tb_i2c_interfaces_slow_read_arc of dut_test_ctrl is
   signal tb_start, tb_end, test_start, test_end : integer_barrier;
 begin
 
-  CreateClock(clk_o, 10 ns);
+  CreateClock(clk_o, 40 ns);
   CreateReset(rst_o, '1', clk_o, 100 ns, 0 ns);
 
   stimuli_p: process is
