@@ -28,8 +28,8 @@ begin
     variable tmp : std_logic_vector(3 downto 0);
   begin
     SB <= NewID("I2C_Read");
-    Log("*** Start of Testbench ***");
     wait until rst_o = '0';
+    Log("*** Start of Testbench ***");
 
     WaitForBarrier(tb_start);
 
@@ -44,7 +44,7 @@ begin
     Push(SB, dev_addr);
     Push(SB, reg_addr);
     WaitForBarrier(test_start);
-    startI2CTransfereInAVMM(avmm_trans_io, '0', 3, reg_addr, dev_addr, 1, datareg);
+    startI2CTransfereInAVMM(avmm_trans_io, '0', "1000", reg_addr, dev_addr, 1, datareg);
     WaitForBarrier(test_done);
     waitForFlags(avmm_trans_io, x"00", x"80000000", '0', CLK_DIVIDE_G * 2);
 
@@ -60,7 +60,7 @@ begin
     Push(SB, dev_addr);
     Push(SB, reg_addr);
     WaitForBarrier(test_start);
-    startI2CTransfereInAVMM(avmm_trans_io, '0', 3, reg_addr, dev_addr, 64, datareg);
+    startI2CTransfereInAVMM(avmm_trans_io, '0', "1000", reg_addr, dev_addr, 64, datareg);
     WaitForBarrier(test_done);
     waitForFlags(avmm_trans_io, x"00", x"80000000", '0', CLK_DIVIDE_G * 2);
 
@@ -71,7 +71,7 @@ begin
     reg_addr := x"00";
     Push(SB, dev_addr);
     WaitForBarrier(test_start);
-    startI2CTransfereInAVMM(avmm_trans_io, '0', 3, reg_addr, dev_addr, 1, datareg);
+    startI2CTransfereInAVMM(avmm_trans_io, '0', "1000", reg_addr, dev_addr, 1, datareg);
     WaitForBarrier(test_done);
     waitForFlags(avmm_trans_io, x"00", x"80000000", '0', CLK_DIVIDE_G * 2);
 
@@ -87,7 +87,7 @@ begin
     Push(SB, dev_addr);
     Push(SB, reg_addr);
     WaitForBarrier(test_start);
-    startI2CTransfereInAVMM(avmm_trans_io, '0', 3, reg_addr, dev_addr, 1, datareg);
+    startI2CTransfereInAVMM(avmm_trans_io, '0', "1000", reg_addr, dev_addr, 1, datareg);
     WaitForBarrier(test_done);
     waitForFlags(avmm_trans_io, x"00", x"80000000", '0', CLK_DIVIDE_G * 2);
 
@@ -104,7 +104,7 @@ begin
     Push(SB, dev_addr);
     Push(SB, reg_addr);
     WaitForBarrier(test_start);
-    startI2CTransfereInAVMM(avmm_trans_io, '0', 3, reg_addr, dev_addr, 1, datareg);
+    startI2CTransfereInAVMM(avmm_trans_io, '0', "1000", reg_addr, dev_addr, 1, datareg);
     WaitForBarrier(test_done);
     waitForFlags(avmm_trans_io, x"00", x"80000000", '0', CLK_DIVIDE_G * 2);
 
@@ -122,7 +122,7 @@ begin
     Push(SB, dev_addr);
     Push(SB, reg_addr);
     WaitForBarrier(test_start);
-    startI2CTransfereInAVMM(avmm_trans_io, '0', 3, reg_addr, dev_addr, 8, datareg);
+    startI2CTransfereInAVMM(avmm_trans_io, '0', "1000", reg_addr, dev_addr, 8, datareg);
     WaitForBarrier(test_done);
     waitForFlags(avmm_trans_io, x"00", x"80000000", '0', CLK_DIVIDE_G * 2);
 
@@ -138,7 +138,7 @@ begin
     Push(SB, dev_addr);
     Push(SB, reg_addr);
     WaitForBarrier(test_start);
-    startI2CTransfereInAVMM(avmm_trans_io, '0', 3, reg_addr, dev_addr, 5, datareg);
+    startI2CTransfereInAVMM(avmm_trans_io, '0', "1000", reg_addr, dev_addr, 5, datareg);
     WaitForBarrier(test_done);
     AvmmWrite(avmm_trans_io,x"00",x"00000001","0001");
     waitForFlags(avmm_trans_io,x"00",x"00000001",'0', CLK_DIVIDE_G * 2);
@@ -151,7 +151,7 @@ begin
     Push(SB, dev_addr);
     Push(SB, reg_addr);
     WaitForBarrier(test_start);
-    startI2CTransfereInAVMM(avmm_trans_io, '0', 3, reg_addr, dev_addr, 4, datareg);
+    startI2CTransfereInAVMM(avmm_trans_io, '0', "1000", reg_addr, dev_addr, 4, datareg);
     WaitForBarrier(test_done);
 
     Log("*** End of Tests (AVMM) ***");
