@@ -15,7 +15,7 @@ begin
   CreateReset(rst_o, '1', clk_o, 100 ns, 0 ns);
   
   stimuli_p: process is
-    variable datareg : DataRegArrayT(0 to 15);
+    variable datareg : DataRegArrayT(0 to 15) := (others => (others => '0'));
   begin
     SB <= NewID(id);
     wait until rst_o = '0';
@@ -33,13 +33,14 @@ begin
     Push(SB, datareg(0)(7 downto 0));
     WaitForBarrier(test_start);
     Log("*** Here 1a ***");
-    startI2CTransfereInAVMM(avmm_trans_io, '1', 0, x"00", "0000000", 1, datareg);
+    startI2CTransfereInAVMM(avmm_trans_io, '1', "0001", x"00", "0000000", 1, datareg);
+    Log("*** Here 1a2 ***");
     WaitForBarrier(test_end);
     Log("*** Here 2a ***");
     waitForFlags(avmm_trans_io, x"00", x"80000000", '0', CLK_DIVIDE_G * 2);
     WaitForBarrier(test_start);
     Log("*** Here 3a ***");
-    startI2CTransfereInAVMM(avmm_trans_io, '1', 0, x"01", "0000001", 1, datareg);
+    startI2CTransfereInAVMM(avmm_trans_io, '1', "0001", x"01", "0000001", 1, datareg);
     WaitForBarrier(test_end);
     Log("*** Here 4a ***");
     waitForFlags(avmm_trans_io, x"00", x"80000000", '0', CLK_DIVIDE_G * 2);
@@ -57,6 +58,7 @@ begin
     WaitForBarrier(test_start);
     Log("*** Here 1b ***");
     I2CRead(i2c_trans_io(0), read_data, 1);
+    Log("*** Here 1b2 ***");
     WaitForBarrier(test_end);
     Log("*** Here 2b ***");
     Check(SB, read_data(7 downto 0));
