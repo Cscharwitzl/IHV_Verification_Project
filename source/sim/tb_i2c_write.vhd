@@ -1,8 +1,8 @@
 library common_lib;
 context common_lib.common_context;
+use osvvm.ScoreBoardPkg_slv.all;
 use work.avmm_pkg.all;
 use work.i2c_pkg.all;
-use osvvm.ScoreBoardPkg_slv.all;
 
 architecture tb_i2c_write_arc of dut_test_ctrl is
   
