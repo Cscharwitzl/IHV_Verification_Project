@@ -116,12 +116,10 @@ architecture rtl of i2c_vu is
     variable byte : std_logic_vector(7 downto 0);
     variable err  : boolean;
   begin
-    Log("Wait for start");
     I2CWaitForStart(pins_io, err);
     if err then
       return;
     end if;
-    Log("started");
 
     -- Read slave address and 0
     I2CReadInto(pins_io, dev_addr, err);
