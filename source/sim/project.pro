@@ -18,17 +18,25 @@ analyze tb_dut.vhd
 #RunTest tb_reset.vhd
 
 analyze tb_i2c_interfaces_read.vhd
-TestCase tb_i2c_interfaces_fast_read
-simulate tb_i2c_interfaces_fast_read
-TestCase tb_i2c_interfaces_slow_read
-simulate tb_i2c_interfaces_slow_read
+#TestCase tb_i2c_interfaces_fast_read_10k
+#simulate tb_i2c_interfaces_fast_read -gCLK_DIVIDE_G=12500
+#TestCase tb_i2c_interfaces_slow_read_10k
+#simulate tb_i2c_interfaces_slow_read -gCLK_DIVIDE_G=2500
+#TestCase tb_i2c_interfaces_fast_read_400k
+#simulate tb_i2c_interfaces_fast_read -gCLK_DIVIDE_G=293
+TestCase tb_i2c_interfaces_slow_read_400k
+simulate tb_i2c_interfaces_slow_read -gCLK_DIVIDE_G=139
 
 
-analyze tb_i2c_interfaces_read.vhd
-TestCase tb_i2c_interfaces_fast_read
-simulate tb_i2c_interfaces_fast_read
-TestCase tb_i2c_interfaces_slow_read
-simulate tb_i2c_interfaces_slow_read
+#analyze tb_i2c_interfaces_write.vhd
+#TestCase tb_i2c_interfaces_fast_write_10k
+#simulate tb_i2c_interfaces_fast_write -gCLK_DIVIDE_G=12500
+#TestCase tb_i2c_interfaces_slow_write_10k
+#simulate tb_i2c_interfaces_slow_write -gCLK_DIVIDE_G=2500
+#TestCase tb_i2c_interfaces_fast_write_400k
+#simulate tb_i2c_interfaces_fast_write -gCLK_DIVIDE_G=293
+#TestCase tb_i2c_interfaces_slow_write_400k
+#simulate tb_i2c_interfaces_slow_write -gCLK_DIVIDE_G=139
 
 #RunTest tb_i2c_communication_header.vhd
 #RunTest tb_i2c_write.vhd

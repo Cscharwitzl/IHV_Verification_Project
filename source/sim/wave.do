@@ -14,7 +14,7 @@ add wave -noupdate /dut_harness/i2c_vu_gen(3)/i2c_vu_inst/sequencer_p/addr_ack
 add wave -noupdate /dut_harness/i2c_vu_gen(3)/i2c_vu_inst/sequencer_p/reg_ack
 add wave -noupdate /dut_harness/i2c_vu_gen(3)/i2c_vu_inst/sequencer_p/sec_addr_ack
 TreeUpdate [SetDefaultTree]
-WaveRestoreCursors {{Cursor 1} {330000 ps} 0}
+WaveRestoreCursors {{Cursor 1} {38616000 ps} 0} {{Cursor 2} {41288000 ps} 0}
 quietly wave cursor active 1
 configure wave -namecolwidth 642
 configure wave -valuecolwidth 100
@@ -30,4 +30,4 @@ configure wave -griddelta 40
 configure wave -timeline 0
 configure wave -timelineunits ns
 update
-WaveRestoreZoom {0 ps} {4501069714 ps}
+WaveRestoreZoom {0 ps} {82597200 ps}
