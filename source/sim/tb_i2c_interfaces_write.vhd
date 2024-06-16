@@ -4,15 +4,15 @@ use osvvm.ScoreBoardPkg_slv.all;
 use work.avmm_pkg.all;
 use work.i2c_pkg.all;
 
-architecture tb_i2c_interfaces_slow_write_arc of dut_test_ctrl is
-  constant id : string    := "I2C Interfaces Slow Write";
+architecture tb_i2c_interfaces_write_arc of dut_test_ctrl is
+  constant id : string    := "I2C Interfaces Write";
   constant op : std_logic := '1'; -- Write
 
   signal SB                                     : ScoreBoardIDType;
   signal tb_start, tb_end, test_start, test_end : integer_barrier;
 begin
 
-  CreateClock(clk_o, 40 ns);
+  CreateClock(clk_o, CLK_PERIOD_G * 1 ns);
   CreateReset(rst_o, '1', clk_o, 100 ns, 0 ns);
 
   stimuli_p: process is
@@ -26,7 +26,7 @@ begin
     wait until rst_o = '0';
     WaitForBarrier(tb_start);
     Log("*** Start of Testbench ***");
-
+    Log("*** CLK PERIOD: " & integer'image(CLK_PERIOD_G) & " ns ***");
     AffirmIfEqual(NUM_BUSSES_G, 4, "Wrong amount of I2C busses.");
 
     datareg(0) := x"33_22_11_A5";
@@ -217,10 +217,24 @@ begin
 
 end architecture;
 
+configuration tb_i2c_interfaces_fast_fast of dut_harness is
+  for harness_arc
+    for dut_test_ctrl_inst: dut_test_ctrl
+      use entity work.dut_test_ctrl(tb_i2c_interfaces_write_arc)
+        generic map (
+          CLK_PERIOD_G => 8
+        );
+    end for;
+  end for;
+end configuration;
+
 configuration tb_i2c_interfaces_slow_write of dut_harness is
   for harness_arc
     for dut_test_ctrl_inst: dut_test_ctrl
-      use entity work.dut_test_ctrl(tb_i2c_interfaces_slow_write_arc);
+      use entity work.dut_test_ctrl(tb_i2c_interfaces_write_arc)
+        generic map (
+          CLK_PERIOD_G => 40
+        );
     end for;
   end for;
 end configuration;
