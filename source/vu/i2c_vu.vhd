@@ -243,7 +243,7 @@ architecture rtl of i2c_vu is
 
     --Write Ack
     I2CWriteBit(pins_io, sec_addr_ack);
-    if reg_ack = '1' then
+    if sec_addr_ack = '1' then
       return;
     end if;
 

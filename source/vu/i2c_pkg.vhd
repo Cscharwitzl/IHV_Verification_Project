@@ -35,10 +35,11 @@ end package;
 package body i2c_pkg is
 
   procedure I2CWrite(signal trans : inout I2cAddressBusRecT; data : std_logic_vector; data_length : integer; addr_ack, reg_ack, sec_addr_ack : in std_logic) is
+    variable dataToModel: std_logic_vector(trans.DataToModel'range);
   begin
     trans.IntToModel <= data_length;
-    trans.DataToModel <= SafeResize(addr_ack & reg_ack & sec_addr_ack & (I2cDataACKsT'range => '0') & data, trans.DataToModel'length);
-    Write(trans, "", data);
+    dataToModel := SafeResize(addr_ack & reg_ack & sec_addr_ack & (I2cDataACKsT'range => '0') & data, trans.DataToModel'length);
+    Write(trans, "", dataToModel);
   end procedure;
 
   procedure I2CWrite(signal trans : inout I2cAddressBusRecT; data : std_logic_vector; data_length : integer) is
