@@ -63,7 +63,7 @@ package body avmm_pkg is
   begin
 
     --select I2C bus
-    AvmmWrite(trans, x"02", x"0000000" & bus_enable, "0001");
+    AvmmWrite(trans, "000010", x"0000000" & bus_enable, "0001");
 
     --write data
     for i in read_data'range loop

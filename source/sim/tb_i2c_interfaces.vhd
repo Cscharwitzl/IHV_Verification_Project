@@ -16,6 +16,7 @@ begin
   
   stimuli_p: process is
     variable datareg : DataRegArrayT(0 to 15) := (others => (others => '0'));
+    variable read_data : std_logic_vector(31 downto 0);
   begin
     SB <= NewID(id);
     wait until rst_o = '0';
@@ -33,7 +34,7 @@ begin
     Push(SB, datareg(0)(7 downto 0));
     WaitForBarrier(test_start);
     Log("*** Here 1a ***");
-    startI2CTransfereInAVMM(avmm_trans_io, '1', "0001", x"00", "0000000", 1, datareg);
+    startI2CTransfereInAVMM(avmm_trans_io, '1', "0011", x"00", "0000000", 1, datareg);
     Log("*** Here 1a2 ***");
     WaitForBarrier(test_end);
     Log("*** Here 2a ***");

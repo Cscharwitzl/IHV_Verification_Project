@@ -38,7 +38,7 @@ architecture harness_arc of dut_harness is
   signal avmm_pins_s: AvmmPinoutT(address(5 downto 0), readdata(31 downto 0), writedata(31 downto 0), byteenable(3 downto 0));
   signal i2c_trans_s: AddressBusRecTypeArray(0 to NUM_BUSSES_G - 1);
   signal i2c_pins_s: I2cPinoutTArray(0 to NUM_BUSSES_G - 1);
-  signal scl_s, sda_s: std_logic_vector(0 to NUM_BUSSES_G - 1);
+  signal scl_s, sda_s: std_logic_vector(NUM_BUSSES_G - 1 downto 0);
   
 begin
 
