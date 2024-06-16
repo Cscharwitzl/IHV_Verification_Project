@@ -17,18 +17,18 @@ analyze tb_dut.vhd
 #RunTest tb_avmm.vhd
 #RunTest tb_reset.vhd
 
-analyze tb_i2c_interfaces_read.vhd
-TestCase tb_i2c_interfaces_fast_read
-simulate tb_i2c_interfaces_fast_read
-TestCase tb_i2c_interfaces_slow_read
-simulate tb_i2c_interfaces_slow_read
+#analyze tb_i2c_interfaces_read.vhd
+#TestCase tb_i2c_interfaces_fast_read
+#simulate tb_i2c_interfaces_fast_read
+#TestCase tb_i2c_interfaces_slow_read
+#simulate tb_i2c_interfaces_slow_read
 
 
-analyze tb_i2c_interfaces_read.vhd
-TestCase tb_i2c_interfaces_fast_read
-simulate tb_i2c_interfaces_fast_read
-TestCase tb_i2c_interfaces_slow_read
-simulate tb_i2c_interfaces_slow_read
+analyze tb_i2c_interfaces_write.vhd
+TestCase tb_i2c_interfaces_fast_write
+simulate tb_i2c_interfaces_fast_write
+TestCase tb_i2c_interfaces_slow_write
+simulate tb_i2c_interfaces_slow_write
 
 #RunTest tb_i2c_communication_header.vhd
 #RunTest tb_i2c_write.vhd
