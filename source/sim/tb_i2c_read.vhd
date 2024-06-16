@@ -34,6 +34,7 @@ begin
     Log("*** Start of Tests (AVMM) ***");
 
     -- master writes 1 byte
+    datareg := (others => (others => '0'));
     datareg(0) := x"00_00_00_55";
     dev_addr := "1010101";
     reg_addr := x"AA";
@@ -43,8 +44,10 @@ begin
     WaitForBarrier(test_start);
     startI2CTransfereInAVMM(avmm_trans_io, '0', 3, reg_addr, dev_addr, 1, datareg);
     WaitForBarrier(test_done);
-/*
+    waitForFlags(avmm_trans_io,x"00",x"80000000",'0', CLK_DIVIDE_G * 2);
+
     -- master writes 64 bytes
+    datareg := (others => (others => '0'));
     for i in datareg'range loop
       tmp := std_logic_vector(to_unsigned(i,4));
       datareg(i) := tmp & tmp & tmp & tmp &tmp & tmp & tmp &tmp ;
@@ -57,20 +60,26 @@ begin
     WaitForBarrier(test_start);
     startI2CTransfereInAVMM(avmm_trans_io, '0', 3, reg_addr, dev_addr, 64, datareg);
     WaitForBarrier(test_done);
-*/
+    waitForFlags(avmm_trans_io,x"00",x"80000000",'0', CLK_DIVIDE_G * 2);
+
     -- slave sends no ack for dev addr
+    datareg := (others => (others => '0'));
     datareg(0) := x"00_00_00_55";
     dev_addr := "1111111";
     reg_addr := x"00";
     Push(SB, dev_addr);
     WaitForBarrier(test_start);
     startI2CTransfereInAVMM(avmm_trans_io, '0', 3, reg_addr, dev_addr, 1, datareg);
+    WaitForBarrier(test_done);
+    waitForFlags(avmm_trans_io,x"00",x"80000000",'0', CLK_DIVIDE_G * 2);
+    
     AvmmRead(avmm_trans_io,x"01","0001",flags);
     AffirmIfEqual(flags(1),'1',"Error flage not set");
     AvmmWrite(avmm_trans_io,x"01",x"F","1111");
-    WaitForBarrier(test_done);
+   
 
     -- slave sends no ack for reg addr
+    datareg := (others => (others => '0'));
     datareg(0) := x"00_00_00_AA";
     dev_addr := "0000000";
     reg_addr := x"FF";
@@ -79,8 +88,14 @@ begin
     WaitForBarrier(test_start);
     startI2CTransfereInAVMM(avmm_trans_io, '0', 3, reg_addr, dev_addr, 1, datareg);
     WaitForBarrier(test_done);
-/*
+    waitForFlags(avmm_trans_io,x"00",x"80000000",'0', CLK_DIVIDE_G * 2);
+
+    AvmmRead(avmm_trans_io,x"01","0001",flags);
+    AffirmIfEqual(flags(1),'1',"Error flage not set");
+    AvmmWrite(avmm_trans_io,x"01",x"F","1111");
+
     -- slave sends no ack for 1 byte
+    datareg := (others => (others => '0'));
     datareg(0) := x"00_00_00_AA";
     dev_addr := "0000000";
     reg_addr := x"FF";
@@ -90,19 +105,31 @@ begin
     WaitForBarrier(test_start);
     startI2CTransfereInAVMM(avmm_trans_io, '0', 3, reg_addr, dev_addr, 1, datareg);
     WaitForBarrier(test_done);
+    waitForFlags(avmm_trans_io,x"00",x"80000000",'0', CLK_DIVIDE_G * 2);
 
-    -- slave sends no ack for n th byte
+    AvmmRead(avmm_trans_io,x"01","0001",flags);
+    AffirmIfEqual(flags(1),'1',"Error flage not set");
+    AvmmWrite(avmm_trans_io,x"01",x"F","1111");
+
+    -- slave sends no ack for 5 th byte
+    datareg := (others => (others => '0'));
     datareg(0) := x"00_FF_55_AA";
+    datareg(1) := x"00_00_00_22";
     dev_addr := "0000000";
     reg_addr := x"FF";
     Push(SB, DataRegArr_to_slv(datareg));
     Push(SB, dev_addr);
     Push(SB, reg_addr);
     WaitForBarrier(test_start);
-    startI2CTransfereInAVMM(avmm_trans_io, '0', 3, reg_addr, dev_addr, 3, datareg);
+    startI2CTransfereInAVMM(avmm_trans_io, '0', 3, reg_addr, dev_addr, 8, datareg);
     WaitForBarrier(test_done);
-    
+    waitForFlags(avmm_trans_io,x"00",x"80000000",'0', CLK_DIVIDE_G * 2);
 
+    AvmmRead(avmm_trans_io,x"01","0001",flags);
+    AffirmIfEqual(flags(1),'1',"Error flage not set");
+    AvmmWrite(avmm_trans_io,x"01",x"F","1111");
+    
+/*
     --read wrong length slave
     datareg(0) := x"22_FF_AA_55";
     dev_addr := "1010101";
@@ -148,7 +175,7 @@ begin
     Check(SB, dev_addr);
     Check(SB, reg_addr);
     WaitForBarrier(test_done);
-/*
+
     -- slave read 64 byte
     WaitForBarrier(test_start);
     I2CRead(i2c_trans_io(3), data_read, 64);
@@ -157,7 +184,6 @@ begin
     Check(SB, dev_addr);
     Check(SB, reg_addr);
     WaitForBarrier(test_done);
-*/
 
     -- slave sends no ack for dev addr
     WaitForBarrier(test_start);
@@ -173,15 +199,27 @@ begin
     Check(SB, dev_addr);
     Check(SB, reg_addr);
     WaitForBarrier(test_done);
-/*
-    --read wrong length slave
+
+    -- slave sends no ack for 1 byte
     WaitForBarrier(test_start);
-    I2CRead(i2c_trans_io(3), data_read, 4);
+    I2CRead(i2c_trans_io(3), data_read, 1,'0','0',(0 => '1',others => '0'));
     (dev_addr,reg_addr,data) := data_read;
     Check(SB, data);
     Check(SB, dev_addr);
     Check(SB, reg_addr);
     WaitForBarrier(test_done);
+
+    -- slave sends no ack for 5 th byte
+    WaitForBarrier(test_start);
+    I2CRead(i2c_trans_io(3), data_read, 10,'0','0',(5 => '1',others => '0'));
+    (dev_addr,reg_addr,data) := data_read;
+    Check(SB, data);
+    Check(SB, dev_addr);
+    Check(SB, reg_addr);
+    WaitForBarrier(test_done);
+
+/*
+    --read wrong length slave
 
     --read wrong length master
     WaitForBarrier(test_start);

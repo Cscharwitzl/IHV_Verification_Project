@@ -135,7 +135,6 @@ architecture rtl of i2c_vu is
     --Write Ack
     I2CWriteBit(pins_io, addr_ack);
     if addr_ack = '1' then
-      wait until pins_io.scl = 'Z';
       return;
     end if;
 
@@ -148,7 +147,6 @@ architecture rtl of i2c_vu is
     --Write Ack
     I2CWriteBit(pins_io, reg_ack);
     if reg_ack = '1' then
-      wait until pins_io.scl = 'Z';
       return;
     end if;
 
@@ -159,15 +157,14 @@ architecture rtl of i2c_vu is
         Alert("expected data Bit but returned (" & to_string(b.bit_type) & ", " & to_string(b.value) & ").");
         return;
       end if;
+      d(i) := byte;
 
       --Write Ack
       I2CWriteBit(pins_io, data_acks(i));
       if data_acks(i) = '1' then
-        wait until pins_io.scl = 'Z';
+        data := flatten(d);
         return;
       end if;
-
-      d(i) := byte;
     end loop;
     data := flatten(d);
     --check stop condition
@@ -212,7 +209,6 @@ architecture rtl of i2c_vu is
     --Write Ack
     I2CWriteBit(pins_io, addr_ack);
     if addr_ack = '1' then
-      wait until pins_io.scl = 'Z';
       return;
     end if;
     
@@ -225,7 +221,6 @@ architecture rtl of i2c_vu is
     --Write Ack
     I2CWriteBit(pins_io, reg_ack);
     if reg_ack = '1' then
-      wait until pins_io.scl = 'Z';
       return;
     end if;
 
@@ -249,7 +244,6 @@ architecture rtl of i2c_vu is
     --Write Ack
     I2CWriteBit(pins_io, sec_addr_ack);
     if reg_ack = '1' then
-      wait until pins_io.scl = 'Z';
       return;
     end if;
 

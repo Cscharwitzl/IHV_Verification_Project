@@ -33,6 +33,7 @@ package avmm_pkg is
     read_data: in DataRegArrayT(15 downto 0) := (others => (others => '0')));
   procedure readDataRegs(signal trans: inout AddressBusRecType; data: out DataRegArrayT);
   function DataRegArr_to_slv(datareg: DataRegArrayT) return std_logic_vector;
+  procedure waitForFlags(signal trans: inout AddressBusRecType; addr : std_logic_vector; bitmask : std_logic_vector(31 downto 0); value : std_logic; maxNumTries : integer);
 
 end package;
 
@@ -100,5 +101,16 @@ package body avmm_pkg is
     return slv;
   end function;
 
+  procedure waitForFlags(signal trans: inout AddressBusRecType; addr : std_logic_vector; bitmask : std_logic_vector(31 downto 0); value : std_logic; maxNumTries : integer) is
+    variable read_data : std_logic_vector(31 downto 0);
+  begin
+    for i in 0 to maxNumTries-1 loop
+      AvmmRead(trans,addr,"1111",read_data);
+      if (or (read_data and bitmask)) = value then
+        return;
+      end if;
+    end loop;
+    Alert("Flag was not set during " & integer'image(maxNumTries) &" numbers of tries");
+  end procedure;
 
 end package body;
