@@ -129,7 +129,7 @@ begin
   begin
     WaitForBarrier(tb_start);
 
-    data := (15 downto 8 => x"11", 7 downto 0 => x"00", others => '0');
+    data := (15 downto 8 => x"11", 7 downto 0 => x"A5", others => '0');
 
     -- Bus 0
     WaitForBarrier(test_start);
