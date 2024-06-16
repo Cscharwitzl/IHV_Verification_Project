@@ -4,8 +4,8 @@ use osvvm.ScoreBoardPkg_slv.all;
 use work.avmm_pkg.all;
 use work.i2c_pkg.all;
 
-architecture tb_i2c_interfaces_arc of dut_test_ctrl is
-  constant id : string := "I2C Interfaces";
+architecture tb_i2c_interfaces_slow_read_arc of dut_test_ctrl is
+  constant id : string := "I2C Interfaces Slow Read";
 
   signal SB                                     : ScoreBoardIDType;
   signal tb_start, tb_end, test_start, test_end : integer_barrier;
@@ -207,10 +207,10 @@ begin
 
 end architecture;
 
-configuration tb_i2c_interfaces of dut_harness is
+configuration tb_i2c_interfaces_slow_read of dut_harness is
   for harness_arc
     for dut_test_ctrl_inst: dut_test_ctrl
-      use entity work.dut_test_ctrl(tb_i2c_interfaces_arc);
+      use entity work.dut_test_ctrl(tb_i2c_interfaces_slow_read_arc);
     end for;
   end for;
 end configuration;
