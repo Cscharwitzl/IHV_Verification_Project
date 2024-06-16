@@ -34,7 +34,7 @@ begin
     WaitForBarrier(tb_start);
 
     Log("*** Start of Tests (AVMM) ***");
-/*
+
     -- master writes 1 byte
     datareg := (others => (others => '0'));
     datareg(0) := x"00_00_00_55";
@@ -128,19 +128,9 @@ begin
 
     AvmmRead(avmm_trans_io, x"01", "0001", flags);
     AffirmIfEqual(flags(1), '1', "Error flage not set");
-    AvmmWrite(avmm_trans_io, x"01", x"F", "1111");
-
-<<<<<<< HEAD
-    AvmmRead(avmm_trans_io,x"01","0001",flags);
-    AffirmIfEqual(flags(1),'1',"Error flage not set");
-    AvmmWrite(avmm_trans_io,x"01",x"F","1111");
- */   
+    AvmmWrite(avmm_trans_io, x"01", x"F", "1111");   
 
     -- master writes too much data
-=======
-    /*
-    --read wrong length slave
->>>>>>> 73fff5adbf3db8b94830088dded147c9bee7e213
     datareg(0) := x"22_FF_AA_55";
     dev_addr := "1010101";
     reg_addr := x"AA";
@@ -178,7 +168,7 @@ begin
   begin
     WaitForBarrier(tb_start);
     Log("*** Start of Tests (I2C) ***");
-/*
+
     -- slave read 1 byte
     WaitForBarrier(test_start);
     I2CRead(i2c_trans_io(3), data_read, 1);
@@ -229,7 +219,7 @@ begin
     Check(SB, dev_addr);
     Check(SB, reg_addr);
     WaitForBarrier(test_done);
-*/
+
     -- master writes too much data
     WaitForBarrier(test_start);
     I2CRead(i2c_trans_io(3), data_read, 4);
@@ -237,19 +227,10 @@ begin
     Check(SB, data);
     Check(SB, dev_addr);
     Check(SB, reg_addr);
-    Log("now");
     WaitForBarrier(test_done);
 
-<<<<<<< HEAD
     -- master writes not enough data
-=======
-    /*
-    --read wrong length slave
-
-    --read wrong length master
->>>>>>> 73fff5adbf3db8b94830088dded147c9bee7e213
     WaitForBarrier(test_start);
-    Log("now");
     I2CRead(i2c_trans_io(3), data_read, 5);
     (dev_addr,reg_addr,data) := data_read;
     Check(SB, data);

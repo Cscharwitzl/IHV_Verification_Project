@@ -252,6 +252,7 @@ architecture rtl of i2c_vu is
         Alert("I2CWrite: Expected I2C_VALUE, recieved " & to_string(b.bit_type));
         return;
       elsif b.value = '1' then -- NACK
+        AffirmIfEqual(i, data_length - 1,"Received NAck before enough bytes were read.");
         exit;
       end if;
     end loop;
