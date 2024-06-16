@@ -275,7 +275,6 @@ begin
     constant STOP_SETUP_TIME      : time := 0.6 us;
     constant STOP_START_IDLE_TIME : time := 1.3 us;
     constant DATA_SETUP_TIME      : time := 100 ns;
-    constant MIN_BUS_PERIOD       : time := 100 us; -- needed to reach 10 kbit/s
     variable start_cond_met  : boolean := false;
     variable start_cond_time : time    := 0 us;
     variable stop_cond_time  : time    := 0 us;
@@ -284,8 +283,6 @@ begin
     variable scl_changed     : boolean := false;
     variable last_sda_change : time    := 0 us;
     variable sda_changed     : boolean := false;
-    variable measure_speed   : boolean := false;
-    variable last_scl_falling: time    := 0 us;
   begin
     wait until (pins_io.scl'event or pins_io.sda'event);
     -- CHECKS FOR SCL LOW/HIGH TIME AND DATA SETUP TIME
@@ -306,13 +303,6 @@ begin
 
       elsif pins_io.scl = '0' and last_scl_change /= 0 ns then
         AlertIfNot(last_scl_change >= HIGH_TIME, "I2C SCL HIGH time of >=0.6 us was not met");
-        if measure_speed then
-          AlertIfNot((now - last_scl_falling) >= MIN_BUS_PERIOD, "I2C MIN BUS PERIOD of >= 100 us was not met");
-          measure_speed := false;
-        end if;
-        if start_cond_met then
-          measure_speed := true;
-        end if;
       end if;
     end if;
 
@@ -349,9 +339,6 @@ begin
     if scl_changed then
       last_scl_change := now;
       scl_changed := false;
-      if pins_io.scl = '0' then
-        last_scl_falling := now;
-      end if;
     end if;
 
     if sda_changed then

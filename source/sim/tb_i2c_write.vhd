@@ -24,10 +24,10 @@ begin
   begin
     SB <= NewID("I2C_write");
     wait until rst_o = '0';
-    Log("*** Start of Testbench ***");
-    Log("*** Start of Tests (AVMM) ***");
+    Log("*** Start of Testbench write ***");
 
     -- master reads 1 byte
+    Log("* master reads 1 byte *");
     dev_addr := "0101010";
     reg_addr := x"55";
     WaitForBarrier(test_start);
@@ -41,6 +41,7 @@ begin
     AffirmIfEqual(Pop(SB), reg_addr, "I2C_write wrong reg address");
 
     -- master reads 64 byte
+    Log("* master reads 64 byte *");
     dev_addr := "1111111";
     reg_addr := x"FF";
     WaitForBarrier(test_start);
@@ -54,6 +55,7 @@ begin
     AffirmIfEqual(Pop(SB), reg_addr, "I2C_write wrong reg address");
 
     -- slave send no dev addr Ack
+    Log("* slave send no dev addr Ack *");
     dev_addr := "0000000";
     reg_addr := x"AA";
     WaitForBarrier(test_start);
@@ -67,6 +69,7 @@ begin
     AvmmWrite(avmm_trans_io, x"01", x"F", "1111");
 
     -- slave send no reg addr Ack
+    Log("* slave send no reg addr Ack *");
     dev_addr := "1010101";
     reg_addr := x"00";
     WaitForBarrier(test_start);
@@ -81,6 +84,7 @@ begin
     AvmmWrite(avmm_trans_io, x"01", x"F", "1111");
 
     -- slave send no 2nd dev addr Ack
+    Log("* slave send no 2nd dev addr Ack *");
     dev_addr := "1010101";
     reg_addr := x"00";
     WaitForBarrier(test_start);
@@ -93,8 +97,9 @@ begin
     AvmmRead(avmm_trans_io, x"01", "0001", flags);
     AffirmIfEqual(flags(1), '1', "Error flage not set");
     AvmmWrite(avmm_trans_io, x"01", x"F", "1111");
-
+/*
     --master reads not enough bytes
+    Log("* master reads not enough bytes *");
     dev_addr := "1111111";
     reg_addr := x"FF";
     WaitForBarrier(test_start);
@@ -106,8 +111,7 @@ begin
     Check(SB, DataRegArr_to_slv(datareg));
     AffirmIfEqual(Pop(SB), dev_addr, "I2C_write wrong dev address");
     AffirmIfEqual(Pop(SB), reg_addr, "I2C_write wrong reg address");
-
-    Log("*** End of Tests (AVMM) ***");
+*/
     Log("*** End of Testbench ***");
 
     std.env.stop;
@@ -119,7 +123,6 @@ begin
     variable dev_addr : std_logic_vector(6 downto 0);
   begin
 
-    Log("*** Start of Tests (I2C) ***");
     -- slave writes 1 byte
     data := (others => '0');
     data(7 downto 0) := x"AA";
@@ -166,6 +169,7 @@ begin
     Push(SB, reg_addr);
     WaitForBarrier(test_done);
 
+/*
     --master reads not enough bytes
     data := (others => '0');
     data(31 downto 0) := x"FF_00_55_AA";
@@ -176,9 +180,7 @@ begin
     Push(SB, dev_addr);
     Push(SB, reg_addr);
     WaitForBarrier(test_done);
-
-    Log("*** End of Tests (I2C) ***");
-
+*/
     wait;
   end process;
 

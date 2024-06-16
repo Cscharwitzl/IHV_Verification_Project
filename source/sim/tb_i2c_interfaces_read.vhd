@@ -25,11 +25,11 @@ begin
     SB <= NewID(id);
     wait until rst_o = '0';
     WaitForBarrier(tb_start);
-    Log("*** Start of Testbench ***");
-    Log("*** CLK PERIOD: " & integer'image(CLK_PERIOD_G) & " ns ***");
+    Log("*** Start of Testbench interface read ***");
+    Log("* CLK PERIOD: " & integer'image(CLK_PERIOD_G) & " ns *");
     AffirmIfEqual(NUM_BUSSES_G, 4, "Wrong amount of I2C busses.");
 
-    datareg(0) := x"33_22_11_A5";
+    datareg(0) := x"33_22_11_01";
     datareg(1) := x"77_66_55_44";
     datareg(2) := x"BB_AA_99_88";
     datareg(3) := x"FF_EE_DD_CC";
@@ -99,7 +99,7 @@ begin
 
     bus_en := "1000";
     -- Bus 3
-    addr := "0000000";
+    addr := "1111111";
     reg_addr := x"2C";
     Push(SB, addr);
     Push(SB, reg_addr);
@@ -118,7 +118,7 @@ begin
     WaitForBarrier(test_end);
 
     WaitForBarrier(tb_end);
-    Log("*** End of Testbench ***");
+    Log("*** End of Testbench interfaces read ***");
     std.env.stop;
   end process;
 
@@ -146,7 +146,7 @@ begin
     Check(SB, reg_addr);
     Check(SB, data(7 downto 0));
 
-    Log("*** Bus0 finished ***");
+    Log("* Bus0 finished *");
 
     -- Bus 1
     WaitForBarrier(test_start);
@@ -164,7 +164,7 @@ begin
     Check(SB, reg_addr);
     Check(SB, data(7 downto 0));
 
-    Log("*** Bus1 finished ***");
+    Log("* Bus1 finished *");
 
     -- Bus 2
     WaitForBarrier(test_start);
@@ -182,7 +182,7 @@ begin
     Check(SB, reg_addr);
     Check(SB, data(7 downto 0));
 
-    Log("*** Bus2 finished ***");
+    Log("* Bus2 finished *");
 
     -- Bus 3
     WaitForBarrier(test_start);
@@ -200,7 +200,7 @@ begin
     Check(SB, reg_addr);
     Check(SB, data(7 downto 0));
 
-    Log("*** Bus3 finished ***");
+    Log("* Bus3 finished *");
 
     WaitForBarrier(tb_end);
     wait;

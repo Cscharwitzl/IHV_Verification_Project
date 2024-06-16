@@ -14,11 +14,14 @@ begin
 
     variable data_read: std_logic_vector(31 downto 0) := (others => '0');
   begin
+    Log("*** Start of Testbench reset ***");
+
     rst_o <= '1';
     WaitForClock(clk_o,3);
     rst_o <= '0';
 
     --T-002
+    Log("* testcase 2");
     AvmmWrite(avmm_trans_io,x"00",x"FFFFFFFE","1111");
     AvmmWrite(avmm_trans_io,x"01",x"FFFFFFFF","1111");
     AvmmWrite(avmm_trans_io,x"02",x"FFFFFFFE","1111");
@@ -36,6 +39,7 @@ begin
 
 
     --T-003
+    Log("* testcase 3");
     AvmmWrite(avmm_trans_io,x"00",x"FFFFFFFE","1111");
     AvmmWrite(avmm_trans_io,x"01",x"FFFFFFFF","1111");
     AvmmWrite(avmm_trans_io,x"02",x"FFFFFFFE","1111");
@@ -48,6 +52,8 @@ begin
     AffirmIfEqual(data_read,statusreg_re, "Status Reg reste values are wrong  (soft-reset)");
     AvmmRead(avmm_trans_io,x"02","1111",data_read);
     AffirmIfEqual(data_read,busreg_re, "Bus Enable Reg reste values are wrong  (soft-reset)");
+
+    Log("*** End of Testbench reset ***");
 
     std.env.stop;
   end process;

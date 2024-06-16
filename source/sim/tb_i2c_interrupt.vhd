@@ -19,12 +19,13 @@ begin
     variable bus_en  : std_logic_vector(3 downto 0) := (others => '0');
   begin
     SB <= NewID(id);
-    Log("*** Start of Testbench ***");
+    Log("*** Start of Testbench interrupt***");
     wait until rst_o = '0';
     WaitForBarrier(tb_start);
 
     for i in 0 to 3 loop
       --interrupt at transfer without error
+      Log("* bus "& integer'image(i) &" interrupt at transfer without error *");
       datareg(0)(7 downto 0) := x"55";
       bus_en := (others => '0');
       bus_en(i) := '1';
@@ -41,6 +42,7 @@ begin
       AffirmIfEqual(irq_i, '0', "Interrupt output is not reset");
 
       --interrupt at transfer with error
+      Log("* bus "& integer'image(i) &" interrupt at transfer with error *");
       datareg(0)(7 downto 0) := x"55";
       WaitForBarrier(test_start);
       startI2CTransfereInAVMM(avmm_trans_io, '0', bus_en, x"AA", "1111111", 1, datareg);
@@ -56,7 +58,7 @@ begin
     end loop;
 
     WaitForBarrier(tb_end);
-    Log("*** End of Testbench ***");
+    Log("*** End of Testbench interrupt ***");
     std.env.stop;
   end process;
 

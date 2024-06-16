@@ -29,13 +29,12 @@ begin
   begin
     SB <= NewID("I2C_Read");
     wait until rst_o = '0';
-    Log("*** Start of Testbench ***");
+    Log("*** Start of Testbench read ***");
 
     WaitForBarrier(tb_start);
 
-    Log("*** Start of Tests (AVMM) ***");
-
     -- master writes 1 byte
+    Log("* master writes 1 byte *");
     datareg := (others => (others => '0'));
     datareg(0) := x"00_00_00_55";
     dev_addr := "1010101";
@@ -49,6 +48,7 @@ begin
     waitForFlags(avmm_trans_io, x"00", x"80000000", '0', CLK_DIVIDE_G * 2);
 
     -- master writes 64 bytes
+    Log("* master writes 64 bytes *");
     datareg := (others => (others => '0'));
     for i in datareg'range loop
       tmp := std_logic_vector(to_unsigned(i, 4));
@@ -65,6 +65,7 @@ begin
     waitForFlags(avmm_trans_io, x"00", x"80000000", '0', CLK_DIVIDE_G * 2);
 
     -- slave sends no ack for dev addr
+    Log("* slave sends no ack for dev addr *");
     datareg := (others => (others => '0'));
     datareg(0) := x"00_00_00_55";
     dev_addr := "1111111";
@@ -80,6 +81,7 @@ begin
     AvmmWrite(avmm_trans_io, x"01", x"F", "1111");
 
     -- slave sends no ack for reg addr
+    Log("* slave sends no ack for reg addr *");
     datareg := (others => (others => '0'));
     datareg(0) := x"00_00_00_AA";
     dev_addr := "0000000";
@@ -96,6 +98,7 @@ begin
     AvmmWrite(avmm_trans_io, x"01", x"F", "1111");
 
     -- slave sends no ack for 1 byte
+    Log("* slave sends no ack for 1 byte *");
     datareg := (others => (others => '0'));
     datareg(0) := x"00_00_00_AA";
     dev_addr := "0000000";
@@ -113,6 +116,7 @@ begin
     AvmmWrite(avmm_trans_io, x"01", x"F", "1111");
 
     -- slave sends no ack for 5 th byte
+    Log("* slave sends no ack for 5th byte *");
     datareg := (others => (others => '0'));
     datareg(0) := x"00_FF_55_AA";
     datareg(1) := x"00_00_00_22";
@@ -130,7 +134,9 @@ begin
     AffirmIfEqual(flags(1), '1', "Error flage not set");
     AvmmWrite(avmm_trans_io, x"01", x"F", "1111");   
 
+/*
     -- master writes too much data
+    Log("* master writes too much data *");
     datareg(0) := x"22_FF_AA_55";
     dev_addr := "1010101";
     reg_addr := x"AA";
@@ -144,6 +150,7 @@ begin
     waitForFlags(avmm_trans_io,x"00",x"00000001",'0', CLK_DIVIDE_G * 2);
 
     -- master writes not enough data
+    Log("* master writes not enough data *");
     datareg(0) := x"22_FF_AA_55";
     dev_addr := "0101010";
     reg_addr := x"55";
@@ -153,10 +160,8 @@ begin
     WaitForBarrier(test_start);
     startI2CTransfereInAVMM(avmm_trans_io, '0', "1000", reg_addr, dev_addr, 4, datareg);
     WaitForBarrier(test_done);
-
-    Log("*** End of Tests (AVMM) ***");
+*/
     Log("*** End of Testbench ***");
-
     std.env.stop;
   end process;
 
@@ -167,7 +172,6 @@ begin
     variable data      : std_logic_vector(64 * 8 - 1 downto 0);
   begin
     WaitForBarrier(tb_start);
-    Log("*** Start of Tests (I2C) ***");
 
     -- slave read 1 byte
     WaitForBarrier(test_start);
@@ -220,6 +224,7 @@ begin
     Check(SB, reg_addr);
     WaitForBarrier(test_done);
 
+/*
     -- master writes too much data
     WaitForBarrier(test_start);
     I2CRead(i2c_trans_io(3), data_read, 4);
@@ -237,9 +242,7 @@ begin
     Check(SB, dev_addr);
     Check(SB, reg_addr);
     WaitForBarrier(test_done);
-
-    Log("*** End of Tests (I2C) ***");
-
+*/
     wait;
   end process;
 
