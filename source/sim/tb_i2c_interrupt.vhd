@@ -18,7 +18,7 @@ begin
   begin
     SB <= NewID(id);
     Log("*** Start of Testbench ***");
-    wait for rst_o = '0';
+    wait until rst_o = '0';
     WaitForBarrier(tb_start);
     -- Tests here -- 
     WaitForBarrier(test_start);
