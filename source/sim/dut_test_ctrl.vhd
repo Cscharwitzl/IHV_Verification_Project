@@ -13,7 +13,8 @@ context osvvm_common.OsvvmCommonContext;
 entity dut_test_ctrl is
   generic (
     CLK_DIVIDE_G: integer := 10000;
-    NUM_BUSSES_G: integer := 4
+    NUM_BUSSES_G: integer := 4;
+    CLK_PERIOD_G  : integer := 10
   );
   port (
     clk_o: out std_logic;

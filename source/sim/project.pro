@@ -16,7 +16,13 @@ analyze tb_dut.vhd
 
 #RunTest tb_avmm.vhd
 #RunTest tb_reset.vhd
-RunTest tb_i2c_interfaces.vhd
+
+analyze tb_i2c_interfaces.vhd
+#RunTest tb_i2c_interfaces.vhd
+simulate tb_i2c_interfaces_fast
+simulate tb_i2c_interfaces_slow
+
+
 #RunTest tb_i2c_communication_header.vhd
 #RunTest tb_i2c_write.vhd
 #RunTest tb_i2c_read.vhd

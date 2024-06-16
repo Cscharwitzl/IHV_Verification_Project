@@ -11,7 +11,7 @@ architecture tb_i2c_interfaces_arc of dut_test_ctrl is
   signal tb_start, tb_end, test_start, test_end : integer_barrier;
 begin
 
-  CreateClock(clk_o, 10 ns);
+  CreateClock(clk_o, CLK_PERIOD_G * 1 ns);
   CreateReset(rst_o, '1', clk_o, 100 ns, 0 ns);
 
   stimuli_p: process is
@@ -25,7 +25,7 @@ begin
     wait until rst_o = '0';
     WaitForBarrier(tb_start);
     Log("*** Start of Testbench ***");
-
+    Log("*** CLK PERIOD: " & integer'image(CLK_PERIOD_G) & " ns ***");
     AffirmIfEqual(NUM_BUSSES_G, 4, "Wrong amount of I2C busses.");
 
     datareg(0) := x"33_22_11_A5";
@@ -207,10 +207,24 @@ begin
 
 end architecture;
 
-configuration tb_i2c_interfaces of dut_harness is
+configuration tb_i2c_interfaces_fast of dut_harness is
   for harness_arc
     for dut_test_ctrl_inst: dut_test_ctrl
-      use entity work.dut_test_ctrl(tb_i2c_interfaces_arc);
+      use entity work.dut_test_ctrl(tb_i2c_interfaces_arc)
+        generic map (
+          CLK_PERIOD_G => 8
+        );
+    end for;
+  end for;
+end configuration;
+
+configuration tb_i2c_interfaces_slow of dut_harness is
+  for harness_arc
+    for dut_test_ctrl_inst: dut_test_ctrl
+      use entity work.dut_test_ctrl(tb_i2c_interfaces_arc)
+        generic map (
+          CLK_PERIOD_G => 40
+        );
     end for;
   end for;
 end configuration;
