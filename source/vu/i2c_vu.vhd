@@ -143,7 +143,7 @@ architecture rtl of i2c_vu is
     if err then
       return;
     end if;
-    
+
     --Write Ack
     I2CWriteBit(pins_io, reg_ack);
     if reg_ack = '1' then
@@ -176,18 +176,16 @@ architecture rtl of i2c_vu is
   end procedure;
 
   procedure perform_write(
-      signal   pins_io     : inout I2cPinoutT;
-      variable dev_addr    : out   std_logic_vector(6 downto 0);
-      variable reg_addr    : out   std_logic_vector(7 downto 0);
-      variable data        : in    std_logic_vector(64 * 8 - 1 downto 0);
-      variable data_length : in    integer;
-      variable addr_ack : in    std_logic;
-      variable reg_ack : in    std_logic;
+      signal   pins_io      : inout I2cPinoutT;
+      variable dev_addr     : out   std_logic_vector(6 downto 0);
+      variable reg_addr     : out   std_logic_vector(7 downto 0);
+      variable data         : in    std_logic_vector(64 * 8 - 1 downto 0);
+      variable data_length  : in    integer;
+      variable addr_ack     : in    std_logic;
+      variable reg_ack      : in    std_logic;
       variable sec_addr_ack : in    std_logic
     ) is
     variable b    : I2cValueRec;
-    variable d    : data_t;
-    variable byte : std_logic_vector(7 downto 0);
     variable err  : boolean;
   begin
     I2CWaitForStart(pins_io, err);
@@ -211,7 +209,7 @@ architecture rtl of i2c_vu is
     if addr_ack = '1' then
       return;
     end if;
-    
+
     -- Read register address
     I2CReadInto(pins_io, reg_addr, err);
     if err then
@@ -269,7 +267,6 @@ architecture rtl of i2c_vu is
 
 begin
 
-
   timing_p: process is
     constant LOW_TIME             : time := 1.3 us;
     constant HIGH_TIME            : time := 0.6 us;
@@ -291,7 +288,7 @@ begin
     -- CHECKS FOR SCL LOW/HIGH TIME AND DATA SETUP TIME
     if pins_io.scl'event then
       scl_changed := true;
-      if pins_io.scl = 'Z' and last_scl_change/= 0 ns then
+      if pins_io.scl = 'Z' and last_scl_change /= 0 ns then
         AlertIfNot(last_scl_change >= LOW_TIME, "I2C SCL LOW time of >=1.3 us was not met");
         -- if a start was currently going on but the sda had no change in the meantime,
         -- that means sda signal simply stayed low until the new rising clock edge, so start has completed
@@ -357,12 +354,6 @@ begin
     variable data_acks                       : I2cDataACKsT;
     variable data                            : std_logic_vector(64 * 8 - 1 downto 0) := (others => '0');
     variable data_length                     : integer;
-    variable b                               : I2cValueRec;
-    variable byte                            : std_logic_vector(7 downto 0);
-    variable d                               : data_t;
-    variable err                             : boolean;
-
-    variable tmp: std_logic_vector(3 + 64 * (8+1) - 1 downto 0);
   begin
     pins_io.scl <= 'Z';
     pins_io.sda <= 'Z';
@@ -380,16 +371,12 @@ begin
           perform_write(pins_io, dev_addr, reg_addr, data, data_length, addr_ack, reg_ack, sec_addr_ack);
           trans_io.DataFromModel <= SafeResize(dev_addr & reg_addr & data, trans_io.DataFromModel'length);
           -- WRITE_OP END 
-
         when READ_OP =>
           data_length := trans_io.IntToModel;
-          --(data, data_acks, sec_addr_ack, reg_ack, addr_ack) := std_logic_vector(trans_io.DataToModel);
           (addr_ack, reg_ack, sec_addr_ack, data_acks, data) := std_logic_vector(trans_io.DataToModel);
-          tmp := std_logic_vector(trans_io.DataToModel);
           perform_read(pins_io, dev_addr, reg_addr, data, data_length, addr_ack, reg_ack, data_acks);
           trans_io.DataFromModel <= SafeResize(dev_addr & reg_addr & data, trans_io.DataFromModel'length);
           -- READ_OP END
-
         when others =>
           Alert("Unimplemented Transaction", FAILURE);
       end case;
