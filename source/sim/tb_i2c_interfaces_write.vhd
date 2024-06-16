@@ -217,7 +217,7 @@ begin
 
 end architecture;
 
-configuration tb_i2c_interfaces_fast_fast of dut_harness is
+configuration tb_i2c_interfaces_fast_write of dut_harness is
   for harness_arc
     for dut_test_ctrl_inst: dut_test_ctrl
       use entity work.dut_test_ctrl(tb_i2c_interfaces_write_arc)
