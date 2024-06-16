@@ -57,7 +57,7 @@ begin
     bus_en := "0010";
     -- Bus 1
     addr := "1010101";
-    reg_addr := x"00";
+    reg_addr := x"11";
     Push(SB, addr);
     Push(SB, reg_addr);
     Push(SB, datareg(0)(7 downto 0));
@@ -66,7 +66,7 @@ begin
     WaitForBarrier(test_end);
     waitForFlags(avmm_trans_io, x"00", x"80000000", '0', CLK_DIVIDE_G * 2);
     addr := "0000001";
-    reg_addr := x"01";
+    reg_addr := x"55";
     Push(SB, addr);
     Push(SB, reg_addr);
     Push(SB, datareg(0)(7 downto 0));
@@ -78,7 +78,7 @@ begin
     bus_en := "0100";
     -- Bus 2
     addr := "1010101";
-    reg_addr := x"00";
+    reg_addr := x"88";
     Push(SB, addr);
     Push(SB, reg_addr);
     Push(SB, datareg(0)(7 downto 0));
@@ -87,7 +87,7 @@ begin
     WaitForBarrier(test_end);
     waitForFlags(avmm_trans_io, x"00", x"80000000", '0', CLK_DIVIDE_G * 2);
     addr := "0000001";
-    reg_addr := x"01";
+    reg_addr := x"AA";
     Push(SB, addr);
     Push(SB, reg_addr);
     Push(SB, datareg(0)(7 downto 0));
@@ -99,7 +99,7 @@ begin
     bus_en := "1000";
     -- Bus 3
     addr := "1010101";
-    reg_addr := x"00";
+    reg_addr := x"2C";
     Push(SB, addr);
     Push(SB, reg_addr);
     Push(SB, datareg(0)(7 downto 0));
@@ -108,14 +108,14 @@ begin
     WaitForBarrier(test_end);
     waitForFlags(avmm_trans_io, x"00", x"80000000", '0', CLK_DIVIDE_G * 2);
     addr := "0000001";
-    reg_addr := x"01";
+    reg_addr := x"FF";
     Push(SB, addr);
     Push(SB, reg_addr);
     Push(SB, datareg(0)(7 downto 0));
     WaitForBarrier(test_start);
     startI2CTransfereInAVMM(avmm_trans_io, op, bus_en, reg_addr, addr, 1, datareg);
     WaitForBarrier(test_end);
-    --waitForFlags(avmm_trans_io, x"00", x"80000000", '0', CLK_DIVIDE_G * 2);
+
     WaitForBarrier(tb_end);
     Log("*** End of Testbench ***");
     std.env.stop;
